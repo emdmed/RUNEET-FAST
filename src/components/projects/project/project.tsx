@@ -12,7 +12,6 @@ import {
 } from "@/components/ui/select";
 import {
   Play,
-  Pause,
   Server,
   Pencil,
   Check,
@@ -23,30 +22,7 @@ import {
   Square,
 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
-
-interface Script {
-  id: string;
-  name: string;
-  script: string;
-  absolutePath: string;
-  port?: number;
-  isRunning?: boolean;
-  type: "frontend" | "backend" | "other";
-}
-
-interface ProjectCardProps {
-  projectName: string;
-  scripts: Script[];
-  onRunScript: (scriptId: string) => Promise<void>;
-  onStopScript: (scriptId: string) => Promise<void>;
-  onRunAllScripts?: () => Promise<void>;
-  onUpdateScripts?: (updatedScripts: Script[]) => Promise<void>;
-  onEditProject?: () => void;
-  onStopAllScripts: (scriptId: string) => Promise<void>;
-  onProjectDelete: (project: any) => Promise<void>;
-  activeScriptsIds: string[];
-  project: any
-}
+import type { Script, ProjectCardProps } from "@/types/types";
 
 export const Project = ({
   projectName,
@@ -58,11 +34,10 @@ export const Project = ({
   onStopAllScripts,
   activeScriptsIds,
   onProjectDelete,
-  project
+  project,
 }: ProjectCardProps) => {
   const [scripts, setScripts] = useState<Script[]>(initialScripts);
   const [isLoading, setIsLoading] = useState<Record<string, boolean>>({});
-  const [isRunningAll, setIsRunningAll] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -70,18 +45,6 @@ export const Project = ({
   useEffect(() => {
     setScripts(initialScripts);
   }, [initialScripts]);
-
-  useEffect(() => {
-    const allActive = scripts.every(
-      (s) => activeScriptsIds.includes(s.id) === true
-    );
-
-    if (allActive) {
-      setIsRunningAll(true);
-    } else {
-      setIsRunningAll(false);
-    }
-  }, [scripts, activeScriptsIds]);
 
   const handleRunScript = async (scriptId: string) => {
     try {
@@ -104,20 +67,18 @@ export const Project = ({
   const handleRunAllScripts = async () => {
     if (!onRunAllScripts) return;
     try {
-      setIsRunningAll(true);
       await onRunAllScripts();
-    } finally {
-      setIsRunningAll(false);
+    } catch (e) {
+      console.log(e);
     }
   };
 
   const handleStopALlScripts = async () => {
     if (!onStopAllScripts) return;
     try {
-      setIsRunningAll(false);
       await onStopAllScripts();
-    } finally {
-      setIsRunningAll(true);
+    } catch(e) {
+      console.log(e)
     }
   };
 
@@ -192,10 +153,8 @@ export const Project = ({
     activeScriptsIds.includes(script.id)
   );
 
-  const handleProjectDelete = (project) => {
-
-    onProjectDelete(project)
-
+  const handleProjectDelete = (project: any) => {
+    onProjectDelete(project);
   };
 
   return (

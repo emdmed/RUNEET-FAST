@@ -3,17 +3,49 @@ import AddProject from "./components/addProject/addProject";
 import { Projects } from "./components/projects/projects";
 import { loadProjectsFromStorage, saveProjectsToStorage } from "./utils/utils";
 import api from "./utils/api";
+import type { ProjectData } from "./types/types";
+
+// Define interface for API response
+interface ProjectResponse {
+  id: string;
+  name: string;
+  scripts: ScriptResponse[];
+}
+
+interface ScriptResponse {
+  id: string;
+  name: string;
+  isRunning: boolean;
+}
 
 function App() {
-  const [projects, setProjects] = useState([]);
-  const [activeScriptsIds, setActiveScriptsIds] = useState([])
+  const [projects, setProjects] = useState<ProjectData[]>([]);
+  const [activeScriptsIds, setActiveScriptsIds] = useState<string[]>([]);
 
-  const sendMonitorProcesses = async (projects) => {
-    if(projects.length === 0) return
-    const response = await api.post("/api/check-status", projects);
-    const activeScripts = response.map(project => project.scripts).flat().filter(script => script.isRunning)
-    const activeScriptIds = activeScripts.map(s => s.id)
-    setActiveScriptsIds(activeScriptIds)
+  // Helper function to safely resolve response type
+  function resolveResponse(response: unknown): ProjectResponse[] {
+    if (response !== null && typeof response === 'object' && 'data' in response) {
+      return (response as { data: ProjectResponse[] }).data;
+    }
+    return response as ProjectResponse[];
+  }
+
+  const sendMonitorProcesses = async (projects: ProjectData[]) => {
+    if(projects.length === 0) return;
+    
+    // Using type assertion to fix the 'unknown' type
+    const response = await api.post<ProjectResponse[]>("/api/check-status", projects);
+    
+    // Use helper function to safely resolve the response type
+    const projectsData = resolveResponse(response);
+    
+    const activeScripts = projectsData
+      .map((project: ProjectResponse) => project.scripts)
+      .flat()
+      .filter((script: ScriptResponse) => script.isRunning);
+    
+    const activeScriptIds = activeScripts.map((s: ScriptResponse) => s.id);
+    setActiveScriptsIds(activeScriptIds);
   };
 
   // Load projects from localStorage on initial render
@@ -37,9 +69,9 @@ function App() {
     return () => clearInterval(timer);
   }, [projects]);
 
-  // Custom project updater that ensures we're working with fresh state
-  const updateProjects = (newProjects) => {
-    setProjects(newProjects);
+  // Fixed updateProjects function that handles both direct values and updater functions
+  const updateProjects = (valueOrFunction: React.SetStateAction<ProjectData[]>) => {
+    setProjects(valueOrFunction);
   };
 
   return (

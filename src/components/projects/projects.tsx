@@ -1,29 +1,6 @@
-import React from "react";
 import { Project } from "./project/project"; // Adjust path as needed
 import api from "@/utils/api";
-
-interface Script {
-  id: string;
-  name: string;
-  script: string;
-  absolutePath: string;
-  port?: number;
-  isRunning?: boolean;
-  type: "frontend" | "backend" | "other";
-}
-
-interface ProjectData {
-  id: string;
-  projectName: string;
-  scripts: Script[];
-  scriptCount: number;
-}
-
-interface ProjectsProps {
-  projects: ProjectData[];
-  setProjects?: (projects: ProjectData[]) => void;
-  activeScriptsIds: string[];
-}
+import type { Script, ProjectsProps } from "@/types/types";
 
 export const Projects = ({
   projects,
@@ -55,7 +32,8 @@ export const Projects = ({
     }
   };
 
-  const onProjectDelete = (project) => {
+  const onProjectDelete = (project: any) => {
+    if(!setProjects) return
     setProjects(projects.filter(p => p.id !== project.id))
   }
 
@@ -84,13 +62,13 @@ export const Projects = ({
     }
   };
 
-  const sendScriptStart = async (project) => {
+  const sendScriptStart = async (project: any) => {
     console.log("project2 ", project);
     const response = await api.post("/api/run-command", project);
     console.log("response", response);
   };
 
-  const sendScriptStop = async (project) => {
+  const sendScriptStop = async (project: any) => {
     const response = await api.post("/api/stop-scripts", project);
     console.log("response", response);
   };

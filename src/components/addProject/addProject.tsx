@@ -21,27 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Plus } from "lucide-react";
-
-interface Script {
-  name: string;
-  absolutePath: string;
-  script: string;
-  port?: number;
-  type: "frontend" | "backend"; // Added type field
-  id?: string; // Add ID field
-}
-
-interface ProjectFormValues {
-  projectName: string;
-  scriptCount: number;
-  scripts: Script[];
-  id: string; // This will store the timestamp in ms
-}
-
-interface AddProjectProps {
-  setProjects: React.Dispatch<React.SetStateAction<any[]>>;
-  projects: any[];
-}
+import type { Script, ProjectFormValues, AddProjectProps } from "@/types/types";
 
 const AddProject = ({ setProjects, projects }: AddProjectProps) => {
   const [open, setOpen] = useState(false);
@@ -65,7 +45,7 @@ const AddProject = ({ setProjects, projects }: AddProjectProps) => {
 
   const handleScriptCountChange = (value: string) => {
     let count = 0;
-    let scriptTemplates = [];
+    let scriptTemplates: Script[] = [];
 
     if (value === "1") {
       count = 1;
@@ -190,13 +170,13 @@ const AddProject = ({ setProjects, projects }: AddProjectProps) => {
 
   const handleFinalSubmit = () => {
     console.log("Form submitted with values:", formValues);
-    
+
     // Ensure the id is set before submitting
     const finalFormValues = {
       ...formValues,
       id: formValues.id || Date.now().toString(), // Use existing id or create new one
     };
-    
+
     // Ensure all scripts have IDs
     finalFormValues.scripts = finalFormValues.scripts.map((script, index) => {
       if (!script.id) {
@@ -207,7 +187,7 @@ const AddProject = ({ setProjects, projects }: AddProjectProps) => {
       }
       return script;
     });
-    
+
     setProjects([...projects, finalFormValues]);
     // Here you would handle the actual submission logic
 
@@ -241,7 +221,9 @@ const AddProject = ({ setProjects, projects }: AddProjectProps) => {
       }}
     >
       <DialogTrigger asChild>
-        <Button variant="default">New <Plus/></Button>
+        <Button variant="default">
+          New <Plus />
+        </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
@@ -315,7 +297,9 @@ const AddProject = ({ setProjects, projects }: AddProjectProps) => {
               <div className="grid gap-2">
                 <Label htmlFor="type">Script Type</Label>
                 <Select
-                  value={formValues.scripts[currentScriptIndex]?.type || "frontend"}
+                  value={
+                    formValues.scripts[currentScriptIndex]?.type || "frontend"
+                  }
                   onValueChange={(value) => {
                     setFormValues((prev) => {
                       const updatedScripts = [...prev.scripts];
@@ -366,8 +350,8 @@ const AddProject = ({ setProjects, projects }: AddProjectProps) => {
                   id="script"
                   name="script"
                   placeholder={
-                    formValues.scripts[currentScriptIndex]?.type === "frontend" 
-                      ? "npm run dev" 
+                    formValues.scripts[currentScriptIndex]?.type === "frontend"
+                      ? "npm run dev"
                       : "npm run server"
                   }
                   value={formValues.scripts[currentScriptIndex]?.script || ""}
@@ -385,8 +369,8 @@ const AddProject = ({ setProjects, projects }: AddProjectProps) => {
                   name="port"
                   type="number"
                   placeholder={
-                    formValues.scripts[currentScriptIndex]?.type === "frontend" 
-                      ? "3000" 
+                    formValues.scripts[currentScriptIndex]?.type === "frontend"
+                      ? "3000"
                       : "8080"
                   }
                   value={formValues.scripts[currentScriptIndex]?.port || ""}
