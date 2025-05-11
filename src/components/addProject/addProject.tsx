@@ -28,12 +28,14 @@ const AddProject = ({ setProjects, projects }: AddProjectProps) => {
   const [step, setStep] = useState(1);
   const [currentScriptIndex, setCurrentScriptIndex] = useState(0);
 
-  const [formValues, setFormValues] = useState<ProjectFormValues>({
+  const initialFormValues: ProjectFormValues = {
     projectName: "",
     id: "",
     scriptCount: 1,
     scripts: [],
-  });
+  };
+
+  const [formValues, setFormValues] = useState<ProjectFormValues>(initialFormValues);
 
   const handleFirstStepChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -191,6 +193,9 @@ const AddProject = ({ setProjects, projects }: AddProjectProps) => {
     setProjects([...projects, finalFormValues]);
     // Here you would handle the actual submission logic
 
+    // Reset form values to initial state
+    setFormValues(initialFormValues);
+    
     // Reset and close the dialog after submission
     setStep(1);
     setCurrentScriptIndex(0);
@@ -198,12 +203,7 @@ const AddProject = ({ setProjects, projects }: AddProjectProps) => {
   };
 
   const resetForm = () => {
-    setFormValues({
-      id: "",
-      projectName: "",
-      scriptCount: 1,
-      scripts: [],
-    });
+    setFormValues(initialFormValues);
     setStep(1);
     setCurrentScriptIndex(0);
   };

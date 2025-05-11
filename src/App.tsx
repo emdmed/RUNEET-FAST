@@ -76,11 +76,11 @@ function App() {
 
   return (
     <div className="h-screen p-8">
-      <div className="flex p-2 items-center gap-3">
+      <div className="flex p-2 items-center gap-2">
         <span className="font-bold text-xl">Runeet</span>{" "}
         <AddProject setProjects={updateProjects} projects={projects} />
       </div>
-      <div className="flex p-2 items-center">
+      <div className="flex p-2 items-center w-full justify-center">
         <Projects activeScriptsIds={activeScriptsIds} projects={projects} setProjects={updateProjects} />
       </div>
     </div>

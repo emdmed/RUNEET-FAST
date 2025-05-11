@@ -11,38 +11,60 @@ const usedPorts = require("./routes/used-ports")
 
 const app = express();
 
-// Define the allowed origin
-const allowedOrigin = 'http://localhost:5173';
+// Define the allowed origins
+const allowedOrigins = [
+  'http://localhost',
+  'http://localhost:3000',
+  'tauri://localhost',
+  'tauri://localhost/',
+  'tauri://generated',
+  'tauri://__',
+  'tauri://127.0.0.1',
+  'http://tauri.localhost'
+];
 
-// CORS configuration with specific origin
+// CORS configuration
 const corsOptions = {
-  origin: allowedOrigin, // Only allow the specific UI origin
+  origin: function (origin, callback) {
+    // Allow requests with no origin
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      // Allow all origins for now - you can restrict this later
+      callback(null, true);
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
   exposedHeaders: ['Content-Range', 'X-Content-Range']
 };
 
-// Enable pre-flight requests for all routes
-app.options('*', cors(corsOptions));
-
-// Apply CORS middleware with our options
+// Use the cors middleware
 app.use(cors(corsOptions));
 
 // JSON parsing middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Request logging and additional CORS headers
+// Additional CORS middleware
 app.use((req, res, next) => {
-    //console.log(`${req.method} ${req.url}`);
+    // Clear any existing CORS headers to avoid conflicts
+    res.header('Access-Control-Allow-Origin', '');
     
-    res.header('Access-Control-Allow-Origin', allowedOrigin);
+    // Set the origin dynamically
+    const origin = req.headers.origin;
+    if (origin) {
+        res.header('Access-Control-Allow-Origin', origin);
+    }
+    
     res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
     res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin');
-    res.header('Access-Control-Max-Age', '86400'); // 24 hours
+    res.header('Access-Control-Allow-Credentials', 'true');
+    res.header('Access-Control-Max-Age', '86400');
     
-    // Handle OPTIONS requests directly
     if (req.method === 'OPTIONS') {
         return res.status(200).end();
     }
@@ -60,9 +82,13 @@ app.use("/api", switchBranchRoute)
 app.use("/api", checkUpdates)
 app.use("/api", usedPorts)
 
-// Default route handler for any unmatched routes
+// Default route handler
 app.use((req, res) => {
-    res.header('Access-Control-Allow-Origin', allowedOrigin);
+    const origin = req.headers.origin;
+    if (origin) {
+        res.header('Access-Control-Allow-Origin', origin);
+    }
+    
     if (req.method === 'OPTIONS') {
         return res.status(200).end();
     }
@@ -73,5 +99,4 @@ app.use((req, res) => {
 const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 3001
 app.listen(port, () => {
     console.log(`Server running at http://localhost:${port}`);
-    console.log(`CORS is enabled for origin: ${allowedOrigin}`);
 })

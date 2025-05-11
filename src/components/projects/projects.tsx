@@ -157,7 +157,7 @@ export const Projects = ({
   return (
     <div className="grid gap-2">
       {projects.length === 0 ? (
-        <div className="col-span-full text-center p-4">
+        <div className="flex w-full justify-center p-4">
           No projects yet. Create your first project using the button above.
         </div>
       ) : (

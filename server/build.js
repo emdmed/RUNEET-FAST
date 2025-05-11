@@ -1,6 +1,6 @@
 require('esbuild').build({
     entryPoints: ['server/server.js'],
-    outfile: 'build/server-bundle.js',
+    outfile: 'server/build/server-bundle.js',
     bundle: true,
     platform: 'node',
     external: ['esbuild'], // if needed
