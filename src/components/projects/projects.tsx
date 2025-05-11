@@ -22,10 +22,14 @@ interface ProjectData {
 interface ProjectsProps {
   projects: ProjectData[];
   setProjects?: (projects: ProjectData[]) => void;
-  activeScriptsIds: string[]
+  activeScriptsIds: string[];
 }
 
-export const Projects = ({ projects, setProjects , activeScriptsIds}: ProjectsProps) => {
+export const Projects = ({
+  projects,
+  setProjects,
+  activeScriptsIds,
+}: ProjectsProps) => {
   const handleRunScript = async (projectId: string, scriptId: string) => {
     console.log(`Running script ${scriptId} for project ${projectId}`);
     // Here you would implement the actual script running logic
@@ -50,6 +54,10 @@ export const Projects = ({ projects, setProjects , activeScriptsIds}: ProjectsPr
       );
     }
   };
+
+  const onProjectDelete = (project) => {
+    setProjects(projects.filter(p => p.id !== project.id))
+  }
 
   const handleStopScript = async (projectId: string, scriptId: string) => {
     console.log(`Stopping script ${scriptId} for project ${projectId}`);
@@ -169,7 +177,7 @@ export const Projects = ({ projects, setProjects , activeScriptsIds}: ProjectsPr
   };
 
   return (
-    <div className="">
+    <div className="grid gap-2">
       {projects.length === 0 ? (
         <div className="col-span-full text-center p-4">
           No projects yet. Create your first project using the button above.
@@ -177,8 +185,10 @@ export const Projects = ({ projects, setProjects , activeScriptsIds}: ProjectsPr
       ) : (
         projects.map((project) => (
           <Project
-          activeScriptsIds={activeScriptsIds}
+            activeScriptsIds={activeScriptsIds}
             key={project.id}
+            project={project}
+            onProjectDelete={onProjectDelete}
             projectName={project.projectName}
             scripts={project.scripts}
             onRunScript={(scriptId) => handleRunScript(project.id, scriptId)}
