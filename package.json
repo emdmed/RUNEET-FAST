@@ -9,7 +9,7 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "tauri": "tauri",
-    "tauri:dev": "tauri dev",
+    "tauri:dev": "npm run build && node ./server/build.js && tauri dev",
     "tauri:build": "tauri build"
   },
   "dependencies": {
