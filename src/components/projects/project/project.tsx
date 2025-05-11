@@ -22,6 +22,7 @@ import {
   Monitor,
   Square,
 } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
 
 interface Script {
   id: string;
@@ -42,7 +43,9 @@ interface ProjectCardProps {
   onUpdateScripts?: (updatedScripts: Script[]) => Promise<void>;
   onEditProject?: () => void;
   onStopAllScripts: (scriptId: string) => Promise<void>;
+  onProjectDelete: (project: any) => Promise<void>;
   activeScriptsIds: string[];
+  project: any
 }
 
 export const Project = ({
@@ -54,6 +57,8 @@ export const Project = ({
   onUpdateScripts,
   onStopAllScripts,
   activeScriptsIds,
+  onProjectDelete,
+  project
 }: ProjectCardProps) => {
   const [scripts, setScripts] = useState<Script[]>(initialScripts);
   const [isLoading, setIsLoading] = useState<Record<string, boolean>>({});
@@ -67,8 +72,10 @@ export const Project = ({
   }, [initialScripts]);
 
   useEffect(() => {
-    const allActive = scripts.every((s) => activeScriptsIds.includes(s.id) === true);
-    
+    const allActive = scripts.every(
+      (s) => activeScriptsIds.includes(s.id) === true
+    );
+
     if (allActive) {
       setIsRunningAll(true);
     } else {
@@ -181,9 +188,15 @@ export const Project = ({
     return null;
   };
 
-  const areAllScriptsRunning = scripts.every(
-    (script) => activeScriptsIds.includes(script.id)
+  const areAllScriptsRunning = scripts.every((script) =>
+    activeScriptsIds.includes(script.id)
   );
+
+  const handleProjectDelete = (project) => {
+
+    onProjectDelete(project)
+
+  };
 
   return (
     <div className="p-2 border rounded bg-card min-w-[270px]">
@@ -192,27 +205,46 @@ export const Project = ({
           <div className="flex items-center justify-between w-full">
             <div className="flex items-center gap-1">
               {projectName}
-              <Button variant="ghost" size="icon" onClick={toggleEditMode}>
+              <Button
+                className="text-gray-600"
+                variant="ghost"
+                size="icon"
+                onClick={toggleEditMode}
+              >
                 <Pencil size={14} />
+              </Button>
+              <Button
+                className="text-gray-600"
+                variant="ghost"
+                size="icon"
+                onClick={() => handleProjectDelete(project)}
+              >
+                <Trash size={14} />
               </Button>
             </div>
             <div className="flex gap-2">
-              <Button
-                variant="default"
-                size="sm"
-                onClick={handleRunAllScripts}
-                disabled={areAllScriptsRunning}
-              >
-                <Play size={14} />
-              </Button>
-              <Button
-                variant="default"
-                size="sm"
-                onClick={handleStopALlScripts}
-                disabled={!areAllScriptsRunning}
-              >
-                <Square size={14} />
-              </Button>
+              {!areAllScriptsRunning && (
+                <Button
+                  variant="default"
+                  className="bg-0 text-lime-300 hover:bg-lime-300 hover:text-black"
+                  size="icon"
+                  onClick={handleRunAllScripts}
+                  disabled={areAllScriptsRunning}
+                >
+                  <Play />
+                </Button>
+              )}
+              {areAllScriptsRunning && (
+                <Button
+                  variant="default"
+                  size="icon"
+                  className="bg-0 text-rose-500 hover:bg-rose-500 hover:text-black"
+                  onClick={handleStopALlScripts}
+                  disabled={!areAllScriptsRunning}
+                >
+                  <Square />
+                </Button>
+              )}
             </div>
           </div>
         </div>
@@ -221,10 +253,7 @@ export const Project = ({
       <div>
         <div className="grid py-2">
           {scripts.map((script) => (
-            <div
-              key={script.id}
-              className="flex items-center gap-1"
-            >
+            <div key={script.id} className="flex items-center gap-1">
               {isEditMode ? (
                 <div className="grid grid-cols-1 gap-2 w-full py-2">
                   <div className="flex items-center gap-2">
@@ -267,7 +296,7 @@ export const Project = ({
                     placeholder="Path to script"
                     className="h-8"
                   />
-                  <Input
+                  <Textarea
                     value={script.script}
                     onChange={(e) =>
                       updateScript(script.id, "script", e.target.value)
@@ -277,11 +306,12 @@ export const Project = ({
                   />
                 </div>
               ) : (
-                <div className="flex">
+                <div className="flex gap-1">
                   {activeScriptsIds.includes(script.id) ? (
                     <Button
-                      variant="ghost"
+                      variant="default"
                       size="icon"
+                      className="bg-0 text-rose-500 hover:bg-rose-500 hover:text-black"
                       onClick={() => handleStopScript(script.id)}
                       disabled={isLoading[script.id]}
                     >
@@ -295,8 +325,9 @@ export const Project = ({
                     </Button>
                   ) : (
                     <Button
-                      variant="ghost"
+                      variant="default"
                       size="icon"
+                      className="bg-0 text-lime-300 hover:bg-lime-300 hover:text-black"
                       onClick={() => handleRunScript(script.id)}
                       disabled={isLoading[script.id]}
                     >
