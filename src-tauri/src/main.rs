@@ -1,7 +1,7 @@
 #[tauri::command]
 async fn start_node_server() -> Result<(), String> {
     let mut cmd = tokio::process::Command::new("node");
-    cmd.arg("server/build/server-bundle.js");
+    cmd.arg("../server/build/server-bundle.js");
     
     match cmd.spawn() {
         Ok(_child) => {
