@@ -162,6 +162,8 @@ router.post("/run-command", async (req, res) => {
                 env: { ...process.env, DISPLAY: ":0" },
                 detached: true
             });
+
+            console.log("childProcess", childProcess)
             
             childProcess.unref();
             

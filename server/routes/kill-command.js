@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-require-imports */
 const express = require("express");
 const { exec } = require("child_process");
 const { promisify } = require("util");
@@ -80,7 +79,7 @@ async function getTerminalsAndCommands() {
 }
 
 // Find and kill processes by matching both absolute path and script command
-// Also terminates the parent terminal process
+// Only terminates the direct parent terminal process for the specific script
 async function killProcessByPathAndCommand(absolutePath, scriptCommand) {
     const allProcesses = await getTerminalsAndCommands();
     
@@ -88,15 +87,21 @@ async function killProcessByPathAndCommand(absolutePath, scriptCommand) {
     const normalizedPath = path.normalize(absolutePath);
     const normalizedScriptCmd = scriptCommand.trim();
     
-    // Find matching processes by path AND command pattern
+    // Find matching processes by path AND command pattern - be more specific with command matching
     const matchingProcesses = allProcesses.filter(process => {
         // Match by working directory path
         const pathMatches = process.cwd && path.normalize(process.cwd) === normalizedPath;
         
-        // Match by command (check if the command contains the script)
-        const commandMatches = process.command && 
-                              (process.command.includes(normalizedScriptCmd) || 
-                               normalizedScriptCmd.includes(process.command));
+        // Make command matching more specific
+        // For npm run dev, we need to be precise to avoid matching other npm commands
+        const commandMatches = process.command && (
+            // Direct match case
+            process.command.includes(normalizedScriptCmd) || 
+            // For npm scripts that might have expanded into node commands
+            (normalizedScriptCmd.startsWith('npm run') && 
+             process.command.includes(normalizedScriptCmd.replace('npm run', 'node')) && 
+             process.command.includes(absolutePath))
+        );
         
         return pathMatches && commandMatches;
     });
@@ -105,28 +110,25 @@ async function killProcessByPathAndCommand(absolutePath, scriptCommand) {
         throw new Error(`No active process found for ${normalizedScriptCmd} in ${normalizedPath}`);
     }
 
-    // Collect parent terminal processes to kill
-    const parentPIDs = new Set();
-    const killedPids = [];
+    // Track script PIDs and their direct parent terminal PIDs only
+    const scriptPids = [];
+    const terminalPids = new Set();
     
-    // First identify the main processes and their parent terminals
+    // First identify the script processes and their direct parent terminals
     for (const proc of matchingProcesses) {
-        killedPids.push(proc.pid);
+        scriptPids.push(proc.pid);
         
-        // Find the terminal process (parent or grandparent)
+        // Only consider the direct parent process
         if (proc.ppid) {
-            parentPIDs.add(proc.ppid);
-            
-            // Find potential terminal emulator grandparents
-            const grandparent = allProcesses.find(p => p.pid === proc.ppid);
-            if (grandparent && grandparent.ppid && isLikelyTerminal(grandparent.command)) {
-                parentPIDs.add(grandparent.ppid);
+            const parent = allProcesses.find(p => p.pid === proc.ppid);
+            if (parent && isLikelyTerminal(parent.command)) {
+                terminalPids.add(proc.ppid);
             }
         }
     }
     
     // Kill script processes first
-    for (const pid of killedPids) {
+    for (const pid of scriptPids) {
         const killCommand = os.platform() === "win32"
             ? `taskkill /PID ${pid} /F`
             : `kill -9 ${pid} || true`;
@@ -139,42 +141,44 @@ async function killProcessByPathAndCommand(absolutePath, scriptCommand) {
         }
     }
     
-    // Then kill parent terminal processes
-    for (const ppid of parentPIDs) {
-        // Check if this is actually a terminal-like process
-        const parentProcess = allProcesses.find(p => p.pid === ppid);
-        if (parentProcess && isLikelyTerminal(parentProcess.command)) {
-            const killCommand = os.platform() === "win32"
-                ? `taskkill /PID ${ppid} /F`
-                : `kill -9 ${ppid} || true`;
-                
-            try {
-                await execAsync(killCommand);
-                console.log(`Killed parent terminal process ${ppid}`);
-                killedPids.push(ppid);
-            } catch (error) {
-                console.error(`Failed to kill parent process ${ppid}: ${error.message}`);
-            }
+    // Then kill parent terminal processes, but only direct parents of the script processes
+    for (const ppid of terminalPids) {
+        const killCommand = os.platform() === "win32"
+            ? `taskkill /PID ${ppid} /F`
+            : `kill -9 ${ppid} || true`;
+            
+        try {
+            await execAsync(killCommand);
+            console.log(`Killed parent terminal process ${ppid}`);
+        } catch (error) {
+            console.error(`Failed to kill parent process ${ppid}: ${error.message}`);
         }
     }
     
     return {
-        scriptPids: killedPids,
-        terminalPids: Array.from(parentPIDs)
+        scriptPids,
+        terminalPids: Array.from(terminalPids)
     };
 }
 
-// Helper function to determine if a process is likely a terminal
+// Helper function to determine if a process is likely a terminal - make more precise
 function isLikelyTerminal(command) {
     const terminalKeywords = [
-        'bash', 'zsh', 'sh', 'terminal', 'konsole', 'gnome-terminal', 
-        'xterm', 'iTerm', 'cmd.exe', 'powershell', 'Command Prompt',
-        'terminal.app', 'rxvt', 'terminator', 'alacritty', 'kitty',
-        'conhost.exe', 'WindowsTerminal'
+        'bash', 'zsh', 'sh', 
+        'gnome-terminal', 'xterm', 'iTerm', 
+        'terminal.app', 'konsole', 'kitty', 'alacritty',
+        'cmd.exe', 'powershell', 'WindowsTerminal', 'conhost.exe'
     ];
     
-    return terminalKeywords.some(keyword => 
-        command.toLowerCase().includes(keyword.toLowerCase()));
+    // Be more specific in matching to avoid false positives
+    // Check if the command starts with the terminal name or contains it as a command
+    return terminalKeywords.some(keyword => {
+        const cmdLower = command.toLowerCase();
+        return cmdLower === keyword.toLowerCase() || 
+               cmdLower.startsWith(keyword.toLowerCase() + ' ') ||
+               cmdLower.includes('/' + keyword.toLowerCase() + ' ') ||
+               cmdLower.includes('\\' + keyword.toLowerCase() + ' ');
+    });
 }
 
 // Handle the new payload format supporting scripts array with additional metadata
