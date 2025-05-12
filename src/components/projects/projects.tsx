@@ -64,7 +64,7 @@ export const Projects = ({
 
   const sendScriptStart = async (project: any) => {
     console.log("project2 ", project);
-    const response = await api.post("/api/run-command", project);
+    const response = await api.post("/api/run-commands", project);
     console.log("response", response);
   };
 

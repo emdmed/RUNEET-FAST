@@ -89,6 +89,7 @@ export const Project = ({
     setIsEditMode(!isEditMode);
   };
 
+
   const saveChanges = async () => {
     if (!onUpdateScripts) return;
     try {

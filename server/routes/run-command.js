@@ -1,12 +1,10 @@
 const express = require("express");
 const { spawn } = require("child_process");
-const { access, writeFile } = require("fs/promises");
+const { access } = require("fs/promises");
 const { exec } = require("child_process");
 const { promisify } = require("util");
 const net = require("net");
 const os = require("os");
-const fs = require("fs");
-const path = require("path");
 
 const router = express.Router();
 const execAsync = promisify(exec);
@@ -31,122 +29,201 @@ const findIsPortAvailable = async (port) => {
     });
 };
 
-router.post("/run-command", async (req, res) => {
+// Function to determine the best terminal emulator available
+const findAvailableTerminal = async () => {
+    const possibleTerminals = ["gnome-terminal", "konsole", "xfce4-terminal", "xterm"];
+    let terminal = "x-terminal-emulator"; // Default fallback
+    
+    for (const term of possibleTerminals) {
+        try {
+            await execAsync(`which ${term}`);
+            terminal = term;
+            break;
+        } catch (err) {
+            console.log(`Terminal ${term} not found, checking next...`);
+        }
+    }
+    
+    return terminal;
+};
+
+router.post("/run-commands", async (req, res) => {
     try {
-        // Extract data from the new payload structure
-        const { scripts, projectName, id } = req.body;
+        const { projectName, id, scriptCount, scripts } = req.body;
         
-        if (!scripts || !scripts.length) {
-            return res.status(400).json({ error: "No scripts provided" });
+        if (!scripts || !Array.isArray(scripts) || scripts.length === 0) {
+            return res.status(400).json({ error: "Valid scripts array is required" });
         }
         
-        // Results to track all executed processes
-        const executionResults = [];
+        // Validate and prepare each script
+        const results = [];
+        const terminal = await findAvailableTerminal();
         
-        // Process each script in the array
-        for (const scriptObj of scripts) {
-            const { script, absolutePath, port, name, id: scriptId } = scriptObj;
+        for (const script of scripts) {
+            const { name, absolutePath, script: command, id: scriptId } = script;
             
-            if (!absolutePath) {
-                return res.status(400).json({ 
-                    error: `Path is required for script: ${name || scriptId}` 
-                });
-            }
-
+            // Validate path
             try {
                 await access(absolutePath);
             } catch (err) {
-                console.log(`Path error for script ${name}:`, err);
-                return res.status(400).json({ 
-                    error: `Invalid or inaccessible path for script: ${name || scriptId}` 
+                results.push({
+                    id: scriptId,
+                    name,
+                    success: false,
+                    error: "Invalid or inaccessible path",
+                });
+                continue;
+            }
+            
+            // Execute the command in a new terminal
+            try {
+                // For Ubuntu Linux
+                const execCommand = `${terminal} -- bash -c "cd '${absolutePath}' && ${command}; exec bash"`;
+                
+                console.log(`Executing [${name}]:`, execCommand);
+                
+                const childProcess = spawn(execCommand, {
+                    shell: true,
+                    stdio: "inherit",
+                    env: { ...process.env, DISPLAY: ":0" },
+                    detached: true // Allow the process to run independently
+                });
+                
+                results.push({
+                    id: scriptId,
+                    name,
+                    success: true,
+                    processId: childProcess.pid,
+                    executedCommand: command,
+                    executedPath: absolutePath,
+                });
+                
+                // Unref to let the parent process exit independently
+                childProcess.unref();
+                
+            } catch (err) {
+                console.error(`Error executing script [${name}]:`, err);
+                results.push({
+                    id: scriptId,
+                    name,
+                    success: false,
+                    error: err.message,
                 });
             }
+        }
+        
+        return res.json({
+            message: `Executed ${results.filter(r => r.success).length} out of ${scripts.length} scripts successfully`,
+            projectName,
+            projectId: id,
+            results
+        });
+    } catch (error) {
+        console.error("Unexpected error:", error.message);
+        return res.status(500).json({ error: error.message });
+    }
+});
 
+// Updated to use the same request body format as run-commands
+router.post("/run-command", async (req, res) => {
+    try {
+        const { projectName, id, scripts } = req.body;
+        
+        // Handle both old and new request body formats
+        if (scripts && Array.isArray(scripts) && scripts.length > 0) {
+            // Use only the first script in the array
+            const script = scripts[0];
+            const { name, absolutePath: path, script: command, id: scriptId } = script;
+            
+            if (!path) {
+                return res.status(400).json({ error: "Path is required" });
+            }
+            
+            try {
+                await access(path);
+            } catch (err) {
+                console.log("Path error", err);
+                return res.status(400).json({ 
+                    error: "Invalid or inaccessible path",
+                    id: scriptId,
+                    name,
+                    success: false
+                });
+            }
+            
+            const terminal = await findAvailableTerminal();
+            const execCommand = `${terminal} -- bash -c "cd '${path}' && ${command}; exec bash"`;
+            
+            console.log(`Executing [${name}]:`, execCommand);
+            
+            const childProcess = spawn(execCommand, {
+                shell: true,
+                stdio: "inherit",
+                env: { ...process.env, DISPLAY: ":0" },
+                detached: true
+            });
+            
+            childProcess.unref();
+            
+            return res.json({
+                message: "Command executed successfully",
+                name,
+                id: scriptId,
+                success: true,
+                executedCommand: command,
+                executedPath: path,
+                processId: childProcess.pid,
+                projectName,
+                projectId: id
+            });
+        } else {
+            // Support old format
+            const { command = "npm run dev", path, port } = req.body;
+            
+            if (!path) {
+                return res.status(400).json({ error: "Path is required" });
+            }
+            
+            try {
+                await access(path);
+            } catch (err) {
+                console.log("Path error", err);
+                return res.status(400).json({ error: "Invalid or inaccessible path" });
+            }
+            
             if (port) {
                 try {
                     const isPortAvailable = await findIsPortAvailable(port);
                     if (!isPortAvailable) {
-                        return res.status(404).json({ 
-                            error: `Port ${port} is in use for script: ${name || scriptId}`, 
-                            isPortUnavailable: true 
-                        });
+                        return res.status(404).json({ error: "Port is in use", isPortUnavailable: true });
                     }
                 } catch (err) {
-                    console.log(`Port check error for script ${name}:`, err);
-                    return res.status(500).json({ 
-                        error: `Error while checking port for script: ${name || scriptId}` 
-                    });
+                    console.log("Port check error", err);
+                    return res.status(500).json({ error: "Error while checking port" });
                 }
             }
-
-            try {
-                // Determine default shell
-                let shell = "bash";
-                try {
-                    await execAsync(`which zsh`);
-                    shell = "zsh";
-                    console.log("Using zsh shell");
-                } catch (shellErr) {
-                    console.log("Zsh not found, using bash");
-                }
-
-                // Create a direct execution script that doesn't use dbus-launch
-                const tempScriptPath = path.join(os.tmpdir(), `run_script_${Date.now()}.sh`);
-                const scriptContent = `#!/bin/${shell}
-# Disable Ubuntu's appmenu integration which can slow down terminal launch
-export UBUNTU_MENUPROXY=0
-
-# Run gnome-terminal directly, avoiding dbus-launch
-# The & at the end ensures the script doesn't wait for gnome-terminal to exit
-gnome-terminal --disable-factory -- ${shell} -c "cd \\"${absolutePath}\\" && ${script}; exec ${shell}" &
-
-# Exit immediately so the HTTP response returns quickly
-exit 0
-`;
-                
-                await writeFile(tempScriptPath, scriptContent, { mode: 0o755 });
-                console.log(`Created script at ${tempScriptPath}`);
-
-                // Execute the script directly
-                console.log(`Launching terminal directly with script: ${tempScriptPath}`);
-                
-                const { stdout, stderr } = await execAsync(`${tempScriptPath}`, {
-                    env: { 
-                        ...process.env, 
-                        UBUNTU_MENUPROXY: "0",
-                        LIBGL_ALWAYS_SOFTWARE: "1" 
-                    }
-                });
-                
-                if (stdout) console.log(`Script output: ${stdout}`);
-                if (stderr) console.error(`Script error: ${stderr}`);
-                
-                // Add this execution to results
-                executionResults.push({
-                    scriptId: scriptId,
-                    scriptName: name,
-                    executedCommand: script,
-                    executedPath: absolutePath,
-                    terminalUsed: "gnome-terminal (direct launch)"
-                });
-                
-                console.log(`Successfully launched script ${name} with direct terminal launch`);
-                
-            } catch (scriptError) {
-                console.error(`Failed to execute script ${name}:`, scriptError);
-                return res.status(500).json({
-                    error: `Failed to execute script ${name}: ${scriptError.message}`
-                });
-            }
+            
+            const terminal = await findAvailableTerminal();
+            const execCommand = `${terminal} -- bash -c "cd '${path}' && ${command}; exec bash"`;
+            
+            console.log("Executing:", execCommand);
+            
+            const childProcess = spawn(execCommand, {
+                shell: true,
+                stdio: "inherit",
+                env: { ...process.env, DISPLAY: ":0" },
+                detached: true
+            });
+            
+            childProcess.unref();
+            
+            return res.json({
+                message: "Command executed successfully",
+                executedCommand: command,
+                executedPath: path,
+                processId: childProcess.pid,
+            });
         }
-
-        // Return results for all scripts
-        return res.json({
-            message: `Successfully executed ${executionResults.length} script(s)`,
-            projectName,
-            projectId: id,
-            executedScripts: executionResults
-        });
     } catch (error) {
         console.error("Unexpected error:", error.message);
         return res.status(500).json({ error: error.message });
