@@ -35,6 +35,7 @@ export const Project = ({
   activeScriptsIds,
   onProjectDelete,
   project,
+  sendSingleScriptStart,
 }: ProjectCardProps) => {
   const [scripts, setScripts] = useState<Script[]>(initialScripts);
   const [isLoading, setIsLoading] = useState<Record<string, boolean>>({});
@@ -45,15 +46,6 @@ export const Project = ({
   useEffect(() => {
     setScripts(initialScripts);
   }, [initialScripts]);
-
-  const handleRunScript = async (scriptId: string) => {
-    try {
-      setIsLoading((prev) => ({ ...prev, [scriptId]: true }));
-      await onRunScript(scriptId);
-    } finally {
-      setIsLoading((prev) => ({ ...prev, [scriptId]: false }));
-    }
-  };
 
   const handleStopScript = async (scriptId: string) => {
     try {
@@ -77,8 +69,8 @@ export const Project = ({
     if (!onStopAllScripts) return;
     try {
       await onStopAllScripts();
-    } catch(e) {
-      console.log(e)
+    } catch (e) {
+      console.log(e);
     }
   };
 
@@ -88,7 +80,6 @@ export const Project = ({
     }
     setIsEditMode(!isEditMode);
   };
-
 
   const saveChanges = async () => {
     if (!onUpdateScripts) return;
@@ -186,8 +177,8 @@ export const Project = ({
               {!areAllScriptsRunning && (
                 <Button
                   variant="default"
-                  className="bg-0 text-lime-300 hover:bg-lime-300 hover:text-black"
-                  size="icon"
+                  className="bg-lime-300"
+                  size="sm"
                   onClick={handleRunAllScripts}
                   disabled={areAllScriptsRunning}
                 >
@@ -266,48 +257,48 @@ export const Project = ({
                   />
                 </div>
               ) : (
-                <div className="flex gap-1">
-                  {activeScriptsIds.includes(script.id) ? (
-                    <Button
-                      variant="default"
-                      size="icon"
-                      className="bg-0 text-rose-500 hover:bg-rose-500 hover:text-black"
-                      onClick={() => handleStopScript(script.id)}
-                      disabled={isLoading[script.id]}
-                    >
-                      {isLoading[script.id] ? (
-                        "Stopping..."
-                      ) : (
-                        <>
-                          <Square size={14} />
-                        </>
-                      )}
-                    </Button>
-                  ) : (
-                    <Button
-                      variant="default"
-                      size="icon"
-                      className="bg-0 text-lime-300 hover:bg-lime-300 hover:text-black"
-                      onClick={() => handleRunScript(script.id)}
-                      disabled={isLoading[script.id]}
-                    >
-                      {isLoading[script.id] ? (
-                        "Starting..."
-                      ) : (
-                        <Play size={14} />
-                      )}
-                    </Button>
-                  )}
-                  <div className="flex gap-2 items-center">
-                    <Badge className="flex items-center gap-2">
+                <div className="flex my-1 px-1 w-full justify-between">
+                  
+                    <div className="flex items-center gap-2">
                       {getScriptIcon(script.type)}
                       <span>{script.name}</span>
-                    </Badge>
+                    </div>
 
                     {activeScriptsIds.includes(script.id) && script.port && (
                       <small className="text-xs">Port {script.port}</small>
                     )}
-                  </div>
+                    {activeScriptsIds.includes(script.id) ? (
+                      <Button
+                        variant="default"
+                        size="sm"
+                        className="bg-0 text-rose-500 hover:bg-rose-500 hover:text-black"
+                        onClick={() => handleStopScript(script.id)}
+                        disabled={isLoading[script.id]}
+                      >
+                        {isLoading[script.id] ? (
+                          "Stopping..."
+                        ) : (
+                          <>
+                            <Square size={14} />
+                          </>
+                        )}
+                      </Button>
+                    ) : (
+                      <Button
+                        variant="default"
+                        size="sm"
+                        className="bg-0 text-lime-300 hover:bg-lime-300 hover:text-black"
+                        onClick={() => onRunScript(project, script.id)}
+                        disabled={isLoading[script.id]}
+                      >
+                        {isLoading[script.id] ? (
+                          "Starting..."
+                        ) : (
+                          <Play size={14} />
+                        )}
+                      </Button>
+                    )}
+               
                 </div>
               )}
             </div>

@@ -7,15 +7,17 @@ export const Projects = ({
   setProjects,
   activeScriptsIds,
 }: ProjectsProps) => {
-  const handleRunScript = async (projectId: string, scriptId: string) => {
-    console.log(`Running script ${scriptId} for project ${projectId}`);
+  const handleRunScript = async (project: any, scriptId: string) => {
+    console.log(`Running script ${scriptId} for project ${project.id}`);
     // Here you would implement the actual script running logic
+
+    await sendSingleScriptStart(project, scriptId);
 
     // Update the isRunning status in the state
     if (setProjects) {
       setProjects(
         projects.map((project) => {
-          if (project.id === projectId) {
+          if (project.id === project.id) {
             return {
               ...project,
               scripts: project.scripts.map((script) => {
@@ -33,9 +35,9 @@ export const Projects = ({
   };
 
   const onProjectDelete = (project: any) => {
-    if(!setProjects) return
-    setProjects(projects.filter(p => p.id !== project.id))
-  }
+    if (!setProjects) return;
+    setProjects(projects.filter((p) => p.id !== project.id));
+  };
 
   const handleStopScript = async (projectId: string, scriptId: string) => {
     console.log(`Stopping script ${scriptId} for project ${projectId}`);
@@ -65,6 +67,14 @@ export const Projects = ({
   const sendScriptStart = async (project: any) => {
     console.log("project2 ", project);
     const response = await api.post("/api/run-commands", project);
+    console.log("response", response);
+  };
+
+  const sendSingleScriptStart = async (project: any, scriptId: string) => {
+    const response = await api.post("/api/run-commands", {
+      ...project,
+      scripts: project.scripts.filter((s) => s.id === scriptId),
+    });
     console.log("response", response);
   };
 
@@ -155,7 +165,7 @@ export const Projects = ({
   };
 
   return (
-    <div className="grid gap-2">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
       {projects.length === 0 ? (
         <div className="flex w-full justify-center p-4">
           No projects yet. Create your first project using the button above.
@@ -169,10 +179,13 @@ export const Projects = ({
             onProjectDelete={onProjectDelete}
             projectName={project.projectName}
             scripts={project.scripts}
-            onRunScript={(scriptId) => handleRunScript(project.id, scriptId)}
+            onRunScript={(project, scriptId) =>
+              handleRunScript(project, scriptId)
+            }
             onStopScript={(scriptId) => handleStopScript(project.id, scriptId)}
             onRunAllScripts={() => handleRunAllScripts(project.id)}
             onStopAllScripts={() => handleStopAllScripts(project.id)}
+            sendSingleScriptStart={sendSingleScriptStart}
             onUpdateScripts={(updatedScripts) =>
               handleUpdateScripts(project.id, updatedScripts)
             }

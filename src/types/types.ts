@@ -24,7 +24,7 @@ export interface ProjectsProps {
 export interface ProjectCardProps {
   projectName: string;
   scripts: Script[];
-  onRunScript: (scriptId: string) => Promise<void>;
+  onRunScript: (project: any, scriptId: string) => Promise<void>;
   onStopScript: (scriptId: string) => Promise<void>;
   onRunAllScripts?: () => Promise<void>;
   onUpdateScripts?: (updatedScripts: Script[]) => Promise<void>;
@@ -33,6 +33,7 @@ export interface ProjectCardProps {
   onProjectDelete: (project: any) => void;
   activeScriptsIds: string[];
   project: any;
+  sendSingleScriptStart: any
 }
 
 export interface ProjectFormValues {
