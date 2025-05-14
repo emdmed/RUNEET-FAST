@@ -4,6 +4,7 @@ import { Projects } from "./components/projects/projects";
 import { loadProjectsFromStorage, saveProjectsToStorage } from "./utils/utils";
 import api from "./utils/api";
 import type { ProjectData } from "./types/types";
+import { PortScanner } from "./components/portScanner/portScanner";
 
 // Define interface for API response
 interface ProjectResponse {
@@ -24,26 +25,33 @@ function App() {
 
   // Helper function to safely resolve response type
   function resolveResponse(response: unknown): ProjectResponse[] {
-    if (response !== null && typeof response === 'object' && 'data' in response) {
+    if (
+      response !== null &&
+      typeof response === "object" &&
+      "data" in response
+    ) {
       return (response as { data: ProjectResponse[] }).data;
     }
     return response as ProjectResponse[];
   }
 
   const sendMonitorProcesses = async (projects: ProjectData[]) => {
-    if(projects.length === 0) return;
-    
+    if (projects.length === 0) return;
+
     // Using type assertion to fix the 'unknown' type
-    const response = await api.post<ProjectResponse[]>("/api/check-status", projects);
-    
+    const response = await api.post<ProjectResponse[]>(
+      "/api/check-status",
+      projects
+    );
+
     // Use helper function to safely resolve the response type
     const projectsData = resolveResponse(response);
-    
+
     const activeScripts = projectsData
       .map((project: ProjectResponse) => project.scripts)
       .flat()
       .filter((script: ScriptResponse) => script.isRunning);
-    
+
     const activeScriptIds = activeScripts.map((s: ScriptResponse) => s.id);
     setActiveScriptsIds(activeScriptIds);
   };
@@ -70,7 +78,9 @@ function App() {
   }, [projects]);
 
   // Fixed updateProjects function that handles both direct values and updater functions
-  const updateProjects = (valueOrFunction: React.SetStateAction<ProjectData[]>) => {
+  const updateProjects = (
+    valueOrFunction: React.SetStateAction<ProjectData[]>
+  ) => {
     setProjects(valueOrFunction);
   };
 
@@ -80,8 +90,15 @@ function App() {
         <span className="font-bold text-xl">Runeet</span>{" "}
         <AddProject setProjects={updateProjects} projects={projects} />
       </div>
+      <div className="flex p-1">
+        <PortScanner />
+      </div>
       <div className="flex p-2 items-center w-full">
-        <Projects activeScriptsIds={activeScriptsIds} projects={projects} setProjects={updateProjects} />
+        <Projects
+          activeScriptsIds={activeScriptsIds}
+          projects={projects}
+          setProjects={updateProjects}
+        />
       </div>
     </div>
   );

@@ -1,6 +1,4 @@
 import { useState, useEffect } from "react";
-
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -35,7 +33,6 @@ export const Project = ({
   activeScriptsIds,
   onProjectDelete,
   project,
-  sendSingleScriptStart,
 }: ProjectCardProps) => {
   const [scripts, setScripts] = useState<Script[]>(initialScripts);
   const [isLoading, setIsLoading] = useState<Record<string, boolean>>({});
@@ -178,7 +175,7 @@ export const Project = ({
                 <Button
                   variant="default"
                   className="bg-lime-300"
-                  size="sm"
+                  size="icon"
                   onClick={handleRunAllScripts}
                   disabled={areAllScriptsRunning}
                 >
@@ -270,7 +267,7 @@ export const Project = ({
                     {activeScriptsIds.includes(script.id) ? (
                       <Button
                         variant="default"
-                        size="sm"
+                        size="icon"
                         className="bg-0 text-rose-500 hover:bg-rose-500 hover:text-black"
                         onClick={() => handleStopScript(script.id)}
                         disabled={isLoading[script.id]}
@@ -286,7 +283,7 @@ export const Project = ({
                     ) : (
                       <Button
                         variant="default"
-                        size="sm"
+                        size="icon"
                         className="bg-0 text-lime-300 hover:bg-lime-300 hover:text-black"
                         onClick={() => onRunScript(project, script.id)}
                         disabled={isLoading[script.id]}

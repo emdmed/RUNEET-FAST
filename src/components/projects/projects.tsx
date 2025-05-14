@@ -73,7 +73,7 @@ export const Projects = ({
   const sendSingleScriptStart = async (project: any, scriptId: string) => {
     const response = await api.post("/api/run-commands", {
       ...project,
-      scripts: project.scripts.filter((s) => s.id === scriptId),
+      scripts: project.scripts.filter((s:any) => s.id === scriptId),
     });
     console.log("response", response);
   };
@@ -161,7 +161,6 @@ export const Projects = ({
 
   const handleEditProject = (projectId: string) => {
     console.log(`Edit project ${projectId}`);
-    // Implement project editing functionality if needed
   };
 
   return (
