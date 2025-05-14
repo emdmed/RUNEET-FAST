@@ -39,15 +39,15 @@ export const Projects = ({
     setProjects(projects.filter((p) => p.id !== project.id));
   };
 
-  const handleStopScript = async (projectId: string, scriptId: string) => {
-    console.log(`Stopping script ${scriptId} for project ${projectId}`);
+  const handleStopScript = async (p: any, scriptId: string) => {
     // Here you would implement the actual script stopping logic
-
+    console.log("p", p, "scriptId", scriptId)
+    sendScriptStop(p, scriptId);
     // Update the isRunning status in the state
     if (setProjects) {
       setProjects(
         projects.map((project) => {
-          if (project.id === projectId) {
+          if (project.id === p.id) {
             return {
               ...project,
               scripts: project.scripts.map((script) => {
@@ -73,24 +73,33 @@ export const Projects = ({
   const sendSingleScriptStart = async (project: any, scriptId: string) => {
     const response = await api.post("/api/run-commands", {
       ...project,
-      scripts: project.scripts.filter((s:any) => s.id === scriptId),
+      scripts: project.scripts.filter((s: any) => s.id === scriptId),
     });
     console.log("response", response);
   };
 
-  const sendScriptStop = async (project: any) => {
+  const sendScriptsStop = async (project: any) => {
     const response = await api.post("/api/stop-scripts", project);
     console.log("response", response);
   };
 
+  const sendScriptStop = async (project: any, scriptId: string) => {
+    console.log("sendScriptStop project", project)
+    const singleScriptProject = {
+      ...project,
+      scripts: project.scripts.filter((s: any) => s.id === scriptId),
+    };
+    const response = await api.post("/api/stop-scripts", singleScriptProject);
+    console.log("response", response);
+  };
+
   const handleRunAllScripts = async (projectId: string) => {
-    console.log(`Running all scripts for project ${projectId}`);
     // Here you would implement logic to run all scripts
-    console.log("project");
     const project = projects.find((p) => p.id === projectId);
 
-    console.log("project 1", project);
-    sendScriptStart(project);
+    const projectWithStoppedScripts = {...project, scripts: project?.scripts.filter(s => s.isRunning === false)}
+
+    sendScriptStart(projectWithStoppedScripts);
 
     // Update all scripts to running in the state
     if (setProjects) {
@@ -112,13 +121,12 @@ export const Projects = ({
   };
 
   const handleStopAllScripts = async (projectId: string) => {
-    console.log(`Running all scripts for project ${projectId}`);
-    // Here you would implement logic to run all scripts
     const project = projects.find((p) => p.id === projectId);
 
-    sendScriptStop(project);
+    const projectWithRunningScripts = {...project, scripts: project?.scripts.filter(s => s.isRunning === true)}
 
-    // Update all scripts to running in the state
+    sendScriptsStop(projectWithRunningScripts);
+
     if (setProjects) {
       setProjects(
         projects.map((project) => {
@@ -164,7 +172,7 @@ export const Projects = ({
   };
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 xs:justify-center sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
       {projects.length === 0 ? (
         <div className="flex w-full justify-center p-4">
           No projects yet. Create your first project using the button above.
@@ -181,7 +189,7 @@ export const Projects = ({
             onRunScript={(project, scriptId) =>
               handleRunScript(project, scriptId)
             }
-            onStopScript={(scriptId) => handleStopScript(project.id, scriptId)}
+            onStopScript={(project, scriptId) => handleStopScript(project, scriptId)}
             onRunAllScripts={() => handleRunAllScripts(project.id)}
             onStopAllScripts={() => handleStopAllScripts(project.id)}
             sendSingleScriptStart={sendSingleScriptStart}

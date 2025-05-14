@@ -6,7 +6,6 @@ export const PortScanner = () => {
   const [ports, setPorts] = useState([]);
   const fetchPorts = async () => {
     const response:any = await api.get(`api/used-ports`);
-    console.log("ports", ports);
     setPorts(response.ports);
   };
 

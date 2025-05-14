@@ -85,15 +85,15 @@ function App() {
   };
 
   return (
-    <div className="h-screen p-1">
+    <div className="h-screen p-2">
       <div className="flex p-1 items-center gap-2 border-b pb-2">
         <span className="font-bold text-xl">Runeet</span>{" "}
         <AddProject setProjects={updateProjects} projects={projects} />
       </div>
-      <div className="flex p-1">
+      <div className="flex p-2" style={{minHeight: 38}}>
         <PortScanner />
       </div>
-      <div className="flex p-2 items-center w-full">
+      <div className="flex p-2 items-center w-full justify-center sm:justify-start">
         <Projects
           activeScriptsIds={activeScriptsIds}
           projects={projects}

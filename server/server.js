@@ -96,7 +96,7 @@ app.use((req, res) => {
 });
 
 // Start the server
-const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 3001
+const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 5554
 app.listen(port, () => {
     console.log(`Server running at http://localhost:${port}`);
 })

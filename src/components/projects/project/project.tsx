@@ -44,10 +44,11 @@ export const Project = ({
     setScripts(initialScripts);
   }, [initialScripts]);
 
-  const handleStopScript = async (scriptId: string) => {
+  const handleStopScript = async (project:any, scriptId: string) => {
+    console.log("handleStopScript", project, scriptId)
     try {
       setIsLoading((prev) => ({ ...prev, [scriptId]: true }));
-      await onStopScript(scriptId);
+      await onStopScript(project, scriptId);
     } finally {
       setIsLoading((prev) => ({ ...prev, [scriptId]: false }));
     }
@@ -255,47 +256,45 @@ export const Project = ({
                 </div>
               ) : (
                 <div className="flex my-1 px-1 w-full justify-between">
-                  
-                    <div className="flex items-center gap-2">
-                      {getScriptIcon(script.type)}
-                      <span>{script.name}</span>
-                    </div>
+                  <div className="flex items-center gap-2">
+                    {getScriptIcon(script.type)}
+                    <span>{script.name}</span>
+                  </div>
 
-                    {activeScriptsIds.includes(script.id) && script.port && (
-                      <small className="text-xs">Port {script.port}</small>
-                    )}
-                    {activeScriptsIds.includes(script.id) ? (
-                      <Button
-                        variant="default"
-                        size="icon"
-                        className="bg-0 text-rose-500 hover:bg-rose-500 hover:text-black"
-                        onClick={() => handleStopScript(script.id)}
-                        disabled={isLoading[script.id]}
-                      >
-                        {isLoading[script.id] ? (
-                          "Stopping..."
-                        ) : (
-                          <>
-                            <Square size={14} />
-                          </>
-                        )}
-                      </Button>
-                    ) : (
-                      <Button
-                        variant="default"
-                        size="icon"
-                        className="bg-0 text-lime-300 hover:bg-lime-300 hover:text-black"
-                        onClick={() => onRunScript(project, script.id)}
-                        disabled={isLoading[script.id]}
-                      >
-                        {isLoading[script.id] ? (
-                          "Starting..."
-                        ) : (
-                          <Play size={14} />
-                        )}
-                      </Button>
-                    )}
-               
+                  {activeScriptsIds.includes(script.id) && script.port && (
+                    <small className="text-xs">Port {script.port}</small>
+                  )}
+                  {activeScriptsIds.includes(script.id) ? (
+                    <Button
+                      variant="default"
+                      size="icon"
+                      className="bg-0 text-rose-500 hover:bg-rose-500 hover:text-black"
+                      onClick={() => handleStopScript(project, script.id)}
+                      disabled={isLoading[script.id]}
+                    >
+                      {isLoading[script.id] ? (
+                        "Stopping..."
+                      ) : (
+                        <>
+                          <Square size={14} />
+                        </>
+                      )}
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="default"
+                      size="icon"
+                      className="bg-0 text-lime-300 hover:bg-lime-300 hover:text-black"
+                      onClick={() => onRunScript(project, script.id)}
+                      disabled={isLoading[script.id]}
+                    >
+                      {isLoading[script.id] ? (
+                        "Starting..."
+                      ) : (
+                        <Play size={14} />
+                      )}
+                    </Button>
+                  )}
                 </div>
               )}
             </div>

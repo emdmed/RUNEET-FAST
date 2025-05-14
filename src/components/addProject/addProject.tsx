@@ -221,7 +221,7 @@ const AddProject = ({ setProjects, projects }: AddProjectProps) => {
       }}
     >
       <DialogTrigger asChild>
-        <Button variant="default">
+        <Button variant="secondary">
           New <Plus />
         </Button>
       </DialogTrigger>
