@@ -1,74 +1,111 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import {
   Play,
-  Server,
   Pencil,
   Check,
   X,
   Plus,
   Trash,
-  Monitor,
   Square,
 } from "lucide-react";
-import { Textarea } from "@/components/ui/textarea";
 import type { Script, ProjectCardProps } from "@/types/types";
+import { ScriptComponent } from "./script/script";
 
 export const Project = ({
   projectName,
   scripts: initialScripts,
-  onRunScript,
   onStopScript,
-  onRunAllScripts,
   onUpdateScripts,
-  onStopAllScripts,
-  activeScriptsIds,
   onProjectDelete,
   project,
+  sendScriptStart,
+  projects,
+  setProjects,
+  sendScriptsStop,
+  socket
 }: ProjectCardProps) => {
   const [scripts, setScripts] = useState<Script[]>(initialScripts);
   const [isLoading, setIsLoading] = useState<Record<string, boolean>>({});
   const [isEditMode, setIsEditMode] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isEntireProjectRunning, setIsEntireProjectRunning] = useState(false);
+
+  const handleRunAllScripts = async () => {
+    const scripts = project.scripts;
+
+    const startedScripts = [];
+
+    for (let i = 0; i < scripts.length; i++) {
+      const response = await sendScriptStart(scripts[i]);
+      startedScripts.push(response);
+    }
+
+    const areAllRunning = startedScripts.every((s) => s.success === true);
+
+    if (areAllRunning) setIsEntireProjectRunning(true);
+
+    if (setProjects) {
+      setProjects(
+        projects.map((p: any) => {
+          if (p.id === project.id) {
+            return {
+              ...project,
+              scripts: p.scripts.map((script: any) => ({
+                ...script,
+                isRunning: true,
+              })),
+            };
+          }
+          return project;
+        })
+      );
+    }
+  };
+
+  const handleStopAllScripts = async () => {
+    const scripts = project.scripts;
+
+    const stoppedScripts = [];
+
+    for (let i = 0; i < scripts.length; i++) {
+      const response = await sendScriptsStop(scripts[i]);
+      stoppedScripts.push(response);
+    }
+
+    const areAllRunning = stoppedScripts.every((s) => s.success === true);
+
+    if (areAllRunning) setIsEntireProjectRunning(false);
+
+    if (setProjects) {
+      setProjects(
+        projects.map((p: any) => {
+          if (p.id === project.id) {
+            return {
+              ...project,
+              scripts: p.scripts.map((script: any) => ({
+                ...script,
+                isRunning: true,
+              })),
+            };
+          }
+          return project;
+        })
+      );
+    }
+  };
 
   // Add useEffect to sync scripts when initialScripts change
   useEffect(() => {
     setScripts(initialScripts);
   }, [initialScripts]);
 
-  const handleStopScript = async (project:any, scriptId: string) => {
-    console.log("handleStopScript", project, scriptId)
+  const handleStopScript = async (project: any, scriptId: string) => {
     try {
       setIsLoading((prev) => ({ ...prev, [scriptId]: true }));
       await onStopScript(project, scriptId);
     } finally {
       setIsLoading((prev) => ({ ...prev, [scriptId]: false }));
-    }
-  };
-
-  const handleRunAllScripts = async () => {
-    if (!onRunAllScripts) return;
-    try {
-      await onRunAllScripts();
-    } catch (e) {
-      console.log(e);
-    }
-  };
-
-  const handleStopALlScripts = async () => {
-    if (!onStopAllScripts) return;
-    try {
-      await onStopAllScripts();
-    } catch (e) {
-      console.log(e);
     }
   };
 
@@ -130,18 +167,9 @@ export const Project = ({
     setScripts((prev) => prev.filter((script) => script.id !== id));
   };
 
-  const getScriptIcon = (type: string) => {
-    if (type === "frontend") {
-      return <Monitor size={14} />;
-    } else if (type === "backend") {
-      return <Server size={14} />;
-    }
-    return null;
-  };
-
-  const areAllScriptsRunning = scripts.every((script) =>
+/*   const areAllScriptsRunning = scripts.every((script) =>
     activeScriptsIds.includes(script.id)
-  );
+  ); */
 
   const handleProjectDelete = (project: any) => {
     onProjectDelete(project);
@@ -172,24 +200,22 @@ export const Project = ({
               </Button>
             </div>
             <div className="flex gap-2">
-              {!areAllScriptsRunning && (
+              {!isEntireProjectRunning && (
                 <Button
                   variant="default"
                   className="bg-lime-300"
                   size="icon"
                   onClick={handleRunAllScripts}
-                  disabled={areAllScriptsRunning}
                 >
                   <Play />
                 </Button>
               )}
-              {areAllScriptsRunning && (
+              {isEntireProjectRunning && (
                 <Button
                   variant="default"
                   size="icon"
                   className="bg-0 text-rose-500 hover:bg-rose-500 hover:text-black"
-                  onClick={handleStopALlScripts}
-                  disabled={!areAllScriptsRunning}
+                  onClick={handleStopAllScripts}
                 >
                   <Square />
                 </Button>
@@ -202,102 +228,18 @@ export const Project = ({
       <div>
         <div className="grid py-2">
           {scripts.map((script) => (
-            <div key={script.id} className="flex items-center gap-1">
-              {isEditMode ? (
-                <div className="grid grid-cols-1 gap-2 w-full py-2">
-                  <div className="flex items-center gap-2">
-                    <Input
-                      value={script.name}
-                      onChange={(e) =>
-                        updateScript(script.id, "name", e.target.value)
-                      }
-                      placeholder="Script name"
-                      className="h-8"
-                    />
-                    <Select
-                      value={script.type}
-                      onValueChange={(value) =>
-                        updateScript(script.id, "type", value)
-                      }
-                    >
-                      <SelectTrigger className="w-24 h-8">
-                        <SelectValue placeholder="Type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="frontend">Frontend</SelectItem>
-                        <SelectItem value="backend">Backend</SelectItem>
-                        <SelectItem value="other">Other</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => removeScript(script.id)}
-                    >
-                      <Trash size={14} />
-                    </Button>
-                  </div>
-                  <Input
-                    value={script.absolutePath}
-                    onChange={(e) =>
-                      updateScript(script.id, "absolutePath", e.target.value)
-                    }
-                    placeholder="Path to script"
-                    className="h-8"
-                  />
-                  <Textarea
-                    value={script.script}
-                    onChange={(e) =>
-                      updateScript(script.id, "script", e.target.value)
-                    }
-                    placeholder="Script command"
-                    className="h-8"
-                  />
-                </div>
-              ) : (
-                <div className="flex my-1 px-1 w-full justify-between">
-                  <div className="flex items-center gap-2">
-                    {getScriptIcon(script.type)}
-                    <span>{script.name}</span>
-                  </div>
-
-                  {activeScriptsIds.includes(script.id) && script.port && (
-                    <small className="text-xs">Port {script.port}</small>
-                  )}
-                  {activeScriptsIds.includes(script.id) ? (
-                    <Button
-                      variant="default"
-                      size="icon"
-                      className="bg-0 text-rose-500 hover:bg-rose-500 hover:text-black"
-                      onClick={() => handleStopScript(project, script.id)}
-                      disabled={isLoading[script.id]}
-                    >
-                      {isLoading[script.id] ? (
-                        "Stopping..."
-                      ) : (
-                        <>
-                          <Square size={14} />
-                        </>
-                      )}
-                    </Button>
-                  ) : (
-                    <Button
-                      variant="default"
-                      size="icon"
-                      className="bg-0 text-lime-300 hover:bg-lime-300 hover:text-black"
-                      onClick={() => onRunScript(project, script.id)}
-                      disabled={isLoading[script.id]}
-                    >
-                      {isLoading[script.id] ? (
-                        "Starting..."
-                      ) : (
-                        <Play size={14} />
-                      )}
-                    </Button>
-                  )}
-                </div>
-              )}
-            </div>
+            <ScriptComponent
+              script={script}
+              removeScript={removeScript}
+              isEditMode={isEditMode}
+              updateScript={updateScript}
+              handleStopScript={handleStopScript}
+              isLoading={isLoading}
+              project={project}
+              projects={projects}
+              setProjects={setProjects}
+              socket={socket}
+            />
           ))}
 
           {isEditMode && (

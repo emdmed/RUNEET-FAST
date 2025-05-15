@@ -5,9 +5,10 @@ import type { Script, ProjectsProps } from "@/types/types";
 export const Projects = ({
   projects,
   setProjects,
-  activeScriptsIds,
+  socket
 }: ProjectsProps) => {
-  const handleRunScript = async (project: any, scriptId: string) => {
+
+/*   const handleRunScript = async (project: any, scriptId: string) => {
     console.log(`Running script ${scriptId} for project ${project.id}`);
     // Here you would implement the actual script running logic
 
@@ -32,7 +33,7 @@ export const Projects = ({
         })
       );
     }
-  };
+  }; */
 
   const onProjectDelete = (project: any) => {
     if (!setProjects) return;
@@ -41,7 +42,7 @@ export const Projects = ({
 
   const handleStopScript = async (p: any, scriptId: string) => {
     // Here you would implement the actual script stopping logic
-    console.log("p", p, "scriptId", scriptId)
+    console.log("p", p, "scriptId", scriptId);
     sendScriptStop(p, scriptId);
     // Update the isRunning status in the state
     if (setProjects) {
@@ -65,26 +66,24 @@ export const Projects = ({
   };
 
   const sendScriptStart = async (project: any) => {
-    console.log("project2 ", project);
-    const response = await api.post("/api/run-commands", project);
-    console.log("response", response);
+    const response = await api.post("api/run-script", project);
+    return response
   };
 
-  const sendSingleScriptStart = async (project: any, scriptId: string) => {
-    const response = await api.post("/api/run-commands", {
+/*   const sendSingleScriptStart = async (project: any, scriptId: string) => {
+        const response = await api.post("/api/run-commands", {
       ...project,
       scripts: project.scripts.filter((s: any) => s.id === scriptId),
-    });
+    }); 
     console.log("response", response);
-  };
+  }; */
 
-  const sendScriptsStop = async (project: any) => {
-    const response = await api.post("/api/stop-scripts", project);
-    console.log("response", response);
+  const sendScriptsStop = async (script: any) => {
+     const response = await api.post("api/stop-script", script);
+     return response
   };
 
   const sendScriptStop = async (project: any, scriptId: string) => {
-    console.log("sendScriptStop project", project)
     const singleScriptProject = {
       ...project,
       scripts: project.scripts.filter((s: any) => s.id === scriptId),
@@ -93,39 +92,15 @@ export const Projects = ({
     console.log("response", response);
   };
 
-  const handleRunAllScripts = async (projectId: string) => {
-    // Here you would implement logic to run all scripts
-    const project = projects.find((p) => p.id === projectId);
-
-    const projectWithStoppedScripts = {...project, scripts: project?.scripts.filter(s => s.isRunning === false)}
-
-    sendScriptStart(projectWithStoppedScripts);
-
-    // Update all scripts to running in the state
-    if (setProjects) {
-      setProjects(
-        projects.map((project) => {
-          if (project.id === projectId) {
-            return {
-              ...project,
-              scripts: project.scripts.map((script) => ({
-                ...script,
-                isRunning: true,
-              })),
-            };
-          }
-          return project;
-        })
-      );
-    }
-  };
 
   const handleStopAllScripts = async (projectId: string) => {
-    const project = projects.find((p) => p.id === projectId);
+    const project: any = projects.find((p) => p.id === projectId);
 
-    const projectWithRunningScripts = {...project, scripts: project?.scripts.filter(s => s.isRunning === true)}
+    const scripts = project.scripts;
 
-    sendScriptsStop(projectWithRunningScripts);
+    for (let i = 0; i < scripts.length; i++) {
+      await sendScriptsStop(scripts[i]);
+    }
 
     if (setProjects) {
       setProjects(
@@ -180,23 +155,24 @@ export const Projects = ({
       ) : (
         projects.map((project) => (
           <Project
-            activeScriptsIds={activeScriptsIds}
             key={project.id}
             project={project}
             onProjectDelete={onProjectDelete}
             projectName={project.projectName}
             scripts={project.scripts}
-            onRunScript={(project, scriptId) =>
-              handleRunScript(project, scriptId)
+            onStopScript={(project, scriptId) =>
+              handleStopScript(project, scriptId)
             }
-            onStopScript={(project, scriptId) => handleStopScript(project, scriptId)}
-            onRunAllScripts={() => handleRunAllScripts(project.id)}
+            sendScriptStart={sendScriptStart}
             onStopAllScripts={() => handleStopAllScripts(project.id)}
-            sendSingleScriptStart={sendSingleScriptStart}
             onUpdateScripts={(updatedScripts) =>
               handleUpdateScripts(project.id, updatedScripts)
             }
             onEditProject={() => handleEditProject(project.id)}
+            projects={projects}
+            setProjects={setProjects}
+            sendScriptsStop={sendScriptsStop}
+            socket={socket}
           />
         ))
       )}
