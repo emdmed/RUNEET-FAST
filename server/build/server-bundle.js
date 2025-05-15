@@ -23715,7 +23715,7 @@ app.use((req, res) => {
   }
   res.status(404).json({ message: "Not found" });
 });
-var port = process.env.PORT ? parseInt(process.env.PORT, 10) : 3001;
+var port = process.env.PORT ? parseInt(process.env.PORT, 10) : 5554;
 app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}`);
 });

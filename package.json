@@ -12,7 +12,7 @@
     "preview": "vite preview",
     "tauri": "tauri",
     "tauri:dev": "npm run build && node ./server/build.js && tauri dev",
-    "tauri:build": "tauri build"
+    "tauri:build": "npm run build && node ./server/build.js && tauri build"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.13",
