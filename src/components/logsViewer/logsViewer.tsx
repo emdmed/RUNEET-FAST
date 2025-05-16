@@ -39,8 +39,8 @@ export default function ScriptOutputViewer({
     <div className="mt-2">
       <span className="text-sm">Terminal</span>
       <pre
-        className="bg-stone-950 text-sm p-2 max-h-[250px] overflow-auto border rounded/"
-        style={{ whiteSpace: "pre-wrap" }}
+        className="bg-stone-950 text-sm p-2 max-h-[250px] overflow-y-auto overflow-x-hidden border rounded w-full"
+        style={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}
       >
         {output.map((line, i) => (
           <div key={i}>{line}</div>
