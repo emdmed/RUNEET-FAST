@@ -51,3 +51,4 @@ router.post("/kill-command", async (req, res) => {
       }
 })
 
+module.exports = router

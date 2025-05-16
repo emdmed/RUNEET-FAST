@@ -5,6 +5,7 @@ const cors = require("cors");
 const { access } = require("fs/promises");
 const { spawn } = require("child_process");
 const usedPortsRoute = require("./routes/used-ports")
+const killPortRoute = require("./routes/kill-port-process")
 const WebSocket = require("ws");
 
 const app = express();
@@ -243,6 +244,7 @@ router.get("/running-scripts", (req, res) => {
 // Mount the router
 app.use("/api", router);
 app.use("/api", usedPortsRoute)
+app.use("/api", killPortRoute)
 
 const PORT = 5554;
 app.listen(PORT, () => {

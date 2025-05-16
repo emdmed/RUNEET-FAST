@@ -91,9 +91,9 @@ export const ScriptComponent = ({
 
   return (
     <div key={script.id} className="flex flex-col w-full">
-      <div className="flex items-center gap-1 w-100">
+      <div className="flex items-center gap-1">
         {isEditMode ? (
-          <div className="grid grid-cols-1 gap-2 w-full py-2">
+          <div className="grid grid-cols-1 gap-2 py-2">
             <div className="flex items-center gap-2">
               <Input
                 value={script.name}
@@ -184,6 +184,7 @@ export const ScriptComponent = ({
       </div>
 
       <ScriptOutputViewer
+      isEditMode={isEditMode}
         output={output}
         isTerminal={isTerminal}
         setOutput={setOutput}

@@ -21,6 +21,10 @@ export interface ProjectsProps {
   socket: any;
 }
 
+export interface PortsResponse {
+  ports: number[]
+}
+
 export interface RunCommandResponse {
   message: string;
   projectName: string;

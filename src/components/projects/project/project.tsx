@@ -176,7 +176,7 @@ export const Project = ({
   };
 
   return (
-    <div className="p-2 border rounded bg-card min-w-[270px]">
+    <div className="p-2 border rounded bg-card min-w-[250px]">
       <div className="p-1 border-b text-lg font-bold">
         <div className="flex items-center justify-between">
           <div className="flex items-center justify-between w-full">
@@ -226,7 +226,7 @@ export const Project = ({
       </div>
 
       <div>
-        <div className="grid py-2">
+        <div className="flex py-2 w-full flex-col">
           {scripts.map((script) => (
             <ScriptComponent
               script={script}

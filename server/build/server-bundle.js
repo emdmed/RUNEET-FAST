@@ -22796,6 +22796,58 @@ var require_used_ports = __commonJS({
   }
 });
 
+// server/routes/kill-port-process.js
+var require_kill_port_process = __commonJS({
+  "server/routes/kill-port-process.js"(exports2, module2) {
+    var { exec } = require("child_process");
+    var util = require("util");
+    var express2 = require_express2();
+    var router2 = express2.Router();
+    var execPromise = util.promisify(exec);
+    router2.post("/kill-command", async (req, res) => {
+      try {
+        const { port } = await req.body;
+        if (!port) {
+          return res.json({ error: "Port not provided" }, { status: 400 });
+        }
+        if (port < 3e3) {
+          return res.status(400).json({ error: "This port process might be not safe to kill" });
+        }
+        const numericPort = Number(port);
+        if (isNaN(numericPort) || numericPort <= 0) {
+          return res.status(400).json({ error: "Port must be a valid positive number" });
+        }
+        const platform = process.platform;
+        let command = "";
+        if (platform === "win32") {
+          command = `for /f "tokens=5" %a in ('netstat -ano | findstr :${numericPort}') do taskkill /F /PID %a`;
+        } else if (platform === "linux") {
+          command = `fuser -k ${numericPort}/tcp 2>/dev/null || true`;
+        } else if (platform === "darwin") {
+          command = `lsof -t -i :${numericPort} | xargs kill -9 2>/dev/null || true`;
+        } else {
+          return res.status(500).json({ error: "Unsupported platform" });
+        }
+        try {
+          const { stdout } = await execPromise(command);
+          return res.json(
+            {
+              killed: true,
+              message: `Killed process(es) using port ${numericPort}`,
+              output: stdout.trim()
+            }
+          );
+        } catch (execError) {
+          return res.status(500).json({ error: `Failed to kill process: ${execError.message}` });
+        }
+      } catch (error) {
+        return res.status(500).json({ error: error.message });
+      }
+    });
+    module2.exports = router2;
+  }
+});
+
 // node_modules/ws/lib/constants.js
 var require_constants = __commonJS({
   "node_modules/ws/lib/constants.js"(exports2, module2) {
@@ -26423,6 +26475,7 @@ var cors = require_lib3();
 var { access } = require("fs/promises");
 var { spawn } = require("child_process");
 var usedPortsRoute = require_used_ports();
+var killPortRoute = require_kill_port_process();
 var WebSocket = require_ws();
 var app = express();
 var router = express.Router();
@@ -26601,6 +26654,7 @@ router.get("/running-scripts", (req, res) => {
 });
 app.use("/api", router);
 app.use("/api", usedPortsRoute);
+app.use("/api", killPortRoute);
 var PORT = 5554;
 app.listen(PORT, () => {
   console.log(`HTTP server listening on http://localhost:${PORT}`);
