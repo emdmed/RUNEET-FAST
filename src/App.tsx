@@ -7,7 +7,7 @@ import {
   Play,
   RefreshCw,
   Search,
-
+  Trash2,
 } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -35,16 +35,32 @@ import {
 } from "@/components/ui/dialog";
 import { ProjectCard } from "./components/projects/projectCard";
 import api from "./utils/api";
+import { useProjectPersistence } from "./hooks/useProjectsPersistence";
 
 const ProjectDashboard = () => {
   // Sample project data based on the provided structure
-  const [projects, setProjects] = useState([]);
+  const storedProjects = useProjectPersistence();
+  const [projects, setProjects] = useState(storedProjects || []);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState("all");
   const [selectedProject, setSelectedProject] = useState(null);
   const [addProjectDialogOpen, setAddProjectDialogOpen] = useState(false);
   const [projectPath, setProjectPath] = useState("");
+  const [allActiveTerminals, setAllActiveTerminals] = useState([]);
+
+  const fetchActiveTerminals = async () => {
+    const activeTerminalsResponse = await api.get("api/monitor-processes");
+    setAllActiveTerminals(activeTerminalsResponse.terminals);
+  };
+
+  useEffect(() => {
+    fetchActiveTerminals();
+  }, []);
+
+  useEffect(() => {
+    if (storedProjects) setProjects(storedProjects);
+  }, [storedProjects]);
 
   // Filter projects based on search term and active tab
   const filteredProjects = projects.filter((project) => {
@@ -53,7 +69,9 @@ const ProjectDashboard = () => {
       .includes(searchTerm.toLowerCase());
     const matchesTab = activeTab === "all" || project.framework === activeTab;
     return matchesSearch && matchesTab;
-  });
+  })
+  // Sort the filtered projects by projectName
+  .sort((a, b) => a.projectName.localeCompare(b.projectName));
 
   const handleProjectSelect = (project) => {
     setSelectedProject(project);
@@ -81,6 +99,11 @@ const ProjectDashboard = () => {
     setAddProjectDialogOpen(true);
   };
 
+  const handleDeleteAllProjects = () => {
+    setProjects([]);
+    localStorage.setItem("projects", "[]");
+  };
+
   const handleAddProjectSubmit = async () => {
     if (!projectPath.trim()) {
       return; // Don't submit if path is empty
@@ -88,19 +111,21 @@ const ProjectDashboard = () => {
 
     try {
       // Perform the POST request
-
       const response = await api.post("/api/find-packages", {
         directory: projectPath,
       });
 
-      const newProject = response.packageJsonFiles
-;
+      const newProject = response.packageJsonFiles;
       // Add the new project to the list
       setProjects([...projects, ...newProject]);
 
       // Close the dialog and reset the path
       setAddProjectDialogOpen(false);
       setProjectPath("");
+      localStorage.setItem(
+        "projects",
+        JSON.stringify([...projects, ...newProject])
+      );
     } catch (error) {
       console.error("Error adding project:", error);
       // In a real app, you would show an error message to the user
@@ -108,7 +133,7 @@ const ProjectDashboard = () => {
   };
 
   return (
-    <div className="flex h-screen">
+    <div className="flex h-screen overflow-hidden">
       {/* Sidebar */}
       <div className="w-64 border-r">
         <div className="p-4">
@@ -170,10 +195,18 @@ const ProjectDashboard = () => {
             </div>
           </Tabs>
 
-          <div className="mt-8">
+          <div className="flex flex-col mt-8 gap-2">
             <Button className="w-full" onClick={handleAddProject}>
               <Plus className="mr-2 h-4 w-4" />
               Add Projects
+            </Button>
+            <Button
+              variant="destructiveOutline"
+              className="w-full"
+              onClick={handleDeleteAllProjects}
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              Delete all
             </Button>
           </div>
         </div>
@@ -212,7 +245,7 @@ const ProjectDashboard = () => {
               No projects found. Try adjusting your search or filters.
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-4">
+            <div className="flex flex-col gap-2 overflow-auto" style={{height: "calc(100vh - 120px)"}}>
               {filteredProjects.map((project) => {
                 return (
                   <ProjectCard
@@ -220,6 +253,7 @@ const ProjectDashboard = () => {
                     project={project}
                     handleProjectAction={handleProjectAction}
                     handleProjectSelect={handleProjectSelect}
+                    allActiveTerminals={allActiveTerminals}
                   />
                 );
               })}

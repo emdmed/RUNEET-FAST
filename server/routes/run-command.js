@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-require-imports */
 const express = require("express");
 const { spawn } = require("child_process");
 const { access } = require("fs/promises");

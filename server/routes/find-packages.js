@@ -59,7 +59,7 @@ const findPackageJsonFiles = async (dir, maxDepth = 5, currentDepth = 0) => {
 
                 const findFramework = (jsonPackage) => {
                     if (jsonPackage?.scripts?.dev?.includes("vite")) return { framework: "vite", command: "npm run dev" };
-                    if (jsonPackage?.scripts?.start?.includes("node")) return { framework: "server", command: "npm start" };
+                    if (jsonPackage?.scripts?.start?.includes("node")) return { framework: "node", command: "npm start" };
                     if (jsonPackage?.scripts?.dev?.includes("next")) return { framework: "next", command: "npm run dev" };
                     if (jsonPackage?.scripts?.start?.includes("react") || jsonPackage?.scripts?.start.includes("webpack")) 
                         return { framework: "react", command: "npm start" };
