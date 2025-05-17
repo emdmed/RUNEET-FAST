@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 const { exec } = require("child_process");
 const util = require("util")
 const express = require("express");
@@ -51,4 +52,3 @@ router.post("/kill-command", async (req, res) => {
       }
 })
 
-module.exports = router

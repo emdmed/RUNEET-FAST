@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-require-imports */
 const express = require("express");
 const fs = require("fs/promises");
 const path = require("path");
@@ -88,11 +87,13 @@ const findPackageJsonFiles = async (dir, maxDepth = 5, currentDepth = 0) => {
         console.error(`Error parsing directory: ${dir}`, error);
     }
 
+    console.log("results", results)
     return results;
 };
 
 router.post("/find-packages", async (req, res) => {
     try {
+        console.log("body", req.body)
         const { directory } = req.body;
 
         if (!directory || typeof directory !== "string") {

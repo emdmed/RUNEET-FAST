@@ -1,6 +1,7 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 require('esbuild').build({
-    entryPoints: ['server/server.js'],
-    outfile: 'server/build/server-bundle.js',
+    entryPoints: ['server.js'],
+    outfile: 'dist/server-bundle.js',
     bundle: true,
     platform: 'node',
     external: ['esbuild'], // if needed

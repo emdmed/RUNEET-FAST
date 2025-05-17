@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { exec } = require('child_process');
+const { exec } = require("child_process");
 const { promisify } = require('util');
 
 function extractUsedPorts(portsStr, platform) {
@@ -80,7 +80,7 @@ router.get("/used-ports", async (req, res) => {
 
         const formattedStdout = extractUsedPorts(stdout, platform)
 
-        return res.json({ ports: formattedStdout.filter(port => port >= 3000) });
+        return res.json({ ports: formattedStdout.filter(port => port > 3000) });
 
     } catch (error) {
         console.error("Unexpected error:", error.message);
