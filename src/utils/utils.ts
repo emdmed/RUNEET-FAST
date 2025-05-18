@@ -34,9 +34,6 @@ export const cloneProject = (project: ProjectData) => {
  * @param {string} projectId - Project ID to find
  * @returns {Object|null} - Found project or null
  */
-export const getProjectById = (projects: ProjectData[], projectId: string) => {
-  return projects.find((project) => project.id === projectId) || null;
-};
 
 /**
  * Gets a script by ID from a project
@@ -44,27 +41,6 @@ export const getProjectById = (projects: ProjectData[], projectId: string) => {
  * @param {string} scriptId - Script ID to find
  * @returns {Object|null} - Found script or null
  */
-export const getScriptById = (project: ProjectData, scriptId: string) => {
-  if (!project || !project.scripts) return null;
-  return project.scripts.find((script) => script.id === scriptId) || null;
-};
-
-/**
- * Updates a specific project in the projects array
- * @param {Array} projects - Array of all projects
- * @param {string} projectId - ID of project to update
- * @param {Object} updatedProject - New project data
- * @returns {Array} - Updated projects array
- */
-export const updateProject = (
-  projects: ProjectData[],
-  projectId: string,
-  updatedProject: ProjectData
-) => {
-  return projects.map((project) =>
-    project.id === projectId ? { ...project, ...updatedProject } : project
-  );
-};
 
 /**
  * Updates a specific script in a project

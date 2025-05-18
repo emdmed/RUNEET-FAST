@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Folder, Plus, Search, Trash2, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -36,10 +36,14 @@ const ProjectDashboard = () => {
 
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState("all");
-  const [selectedProject, setSelectedProject] = useState<ProjectData | null>(null);
+  const [selectedProject, setSelectedProject] = useState<ProjectData | null>(
+    null
+  );
   const [addProjectDialogOpen, setAddProjectDialogOpen] = useState(false);
   const [projectPath, setProjectPath] = useState("");
-  const [allActiveTerminals, setAllActiveTerminals] = useState<ProcessesData[]>([]);
+  const [allActiveTerminals, setAllActiveTerminals] = useState<ProcessesData[]>(
+    []
+  );
 
   const fetchActiveTerminals = async () => {
     const activeTerminalsResponse: any = await api.get("api/monitor-processes");
@@ -82,7 +86,7 @@ const ProjectDashboard = () => {
     });
 
   const handleProjectSelect = (project: ProjectData | null) => {
-    if(!project) return 
+    if (!project) return;
     setSelectedProject(project);
   };
 
@@ -327,11 +331,13 @@ const ProjectDashboard = () => {
                           <SelectValue placeholder="Switch" />
                         </SelectTrigger>
                         <SelectContent>
-                          {selectedProject.availableBranches.map((branch: string) => (
-                            <SelectItem key={branch} value={branch}>
-                              {branch}
-                            </SelectItem>
-                          ))}
+                          {selectedProject.availableBranches.map(
+                            (branch: string) => (
+                              <SelectItem key={branch} value={branch}>
+                                {branch}
+                              </SelectItem>
+                            )
+                          )}
                         </SelectContent>
                       </Select>
                     )}
