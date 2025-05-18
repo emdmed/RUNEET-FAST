@@ -36,6 +36,7 @@ import {
 import { ProjectCard } from "./components/projects/projectCard";
 import api from "./utils/api";
 import { useProjectPersistence } from "./hooks/useProjectsPersistence";
+import { PortScanner } from "./components/portScanner/portScanner";
 
 const ProjectDashboard = () => {
   // Sample project data based on the provided structure
@@ -63,15 +64,31 @@ const ProjectDashboard = () => {
   }, [storedProjects]);
 
   // Filter projects based on search term and active tab
-  const filteredProjects = projects.filter((project) => {
-    const matchesSearch = project.projectName
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase());
-    const matchesTab = activeTab === "all" || project.framework === activeTab;
-    return matchesSearch && matchesTab;
-  })
-  // Sort the filtered projects by projectName
-  .sort((a, b) => a.projectName.localeCompare(b.projectName));
+  const filteredProjects = projects
+    .filter((project) => {
+      const matchesSearch = project.projectName
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase());
+      const matchesTab = activeTab === "all" || project.framework === activeTab;
+      return matchesSearch && matchesTab;
+    })
+    // First sort by active status (active projects first), then by projectName
+    .sort((a, b) => {
+      const isActiveA = allActiveTerminals.some(
+        (terminal) => terminal.path === a.path
+      );
+      const isActiveB = allActiveTerminals.some(
+        (terminal) => terminal.path === b.path
+      );
+
+      // If active status differs, sort by active status (active first)
+      if (isActiveA !== isActiveB) {
+        return isActiveA ? -1 : 1;
+      }
+
+      // If active status is the same, sort alphabetically by projectName
+      return a.projectName.localeCompare(b.projectName);
+    });
 
   const handleProjectSelect = (project) => {
     setSelectedProject(project);
@@ -209,6 +226,7 @@ const ProjectDashboard = () => {
               Delete all
             </Button>
           </div>
+          <PortScanner/>
         </div>
       </div>
 
@@ -245,7 +263,10 @@ const ProjectDashboard = () => {
               No projects found. Try adjusting your search or filters.
             </div>
           ) : (
-            <div className="flex flex-col gap-2 overflow-auto" style={{height: "calc(100vh - 120px)"}}>
+            <div
+              className="flex flex-col gap-2 overflow-auto px-3"
+              style={{ height: "calc(100vh - 120px)" }}
+            >
               {filteredProjects.map((project) => {
                 return (
                   <ProjectCard
@@ -254,6 +275,7 @@ const ProjectDashboard = () => {
                     handleProjectAction={handleProjectAction}
                     handleProjectSelect={handleProjectSelect}
                     allActiveTerminals={allActiveTerminals}
+                    fetchActiveTerminals={fetchActiveTerminals}
                   />
                 );
               })}

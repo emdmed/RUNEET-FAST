@@ -62,9 +62,10 @@ export const PortScanner = () => {
 
   return (
     <>
-      <div className="flex gap-2 items-center">
+      <div className="flex flex-col gap-2 items-center mt-4 border-t p-2">
         <small>Ports in use: </small>
-        {ports.map((port) => (
+        <div className="grid grid-cols-4 gap-4">
+          {ports.map((port) => (
           <Badge
             key={port}
             onClick={() => openConfirmDialog(port)}
@@ -74,6 +75,7 @@ export const PortScanner = () => {
             {port}
           </Badge>
         ))}
+        </div>
       </div>
 
       <AlertDialog open={isConfirmOpen} onOpenChange={setIsConfirmOpen}>

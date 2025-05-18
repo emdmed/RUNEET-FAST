@@ -36,10 +36,11 @@ export const ProjectCard = ({
   handleProjectSelect,
   handleProjectAction,
   allActiveTerminals,
+  fetchActiveTerminals,
 }) => {
   const { depCount, devDepCount } = countDependencies(project);
   const [isActive, setIsActive] = useState(false);
-  const [port, setPort] = useState("")
+  const [port, setPort] = useState("");
 
   useEffect(() => {
     if (!allActiveTerminals) return;
@@ -71,6 +72,12 @@ export const ProjectCard = ({
     return command;
   };
 
+  const handleStopProject = async () => {
+    const response = await api.post("api/kill-command", { path: project.path });
+
+    if (response) fetchActiveTerminals();
+  };
+
   const handleStartProject = async () => {
     const payload = {
       command: createCommand(project, port),
@@ -79,68 +86,79 @@ export const ProjectCard = ({
     };
 
     const response = await api.post(`api/run-command`, payload);
-    console.log("response", response)
+
+    if (response) {
+      setTimeout(() => {
+        fetchActiveTerminals();
+      }, 3000);
+    }
   };
   return (
     <Card
       key={project.path}
-      className={`cursor-pointer p-1 gap-1 ${isActive ? "border-primary" : ""}`}
+      className={`cursor-pointer p-0 gap-1 ${isActive ? "border-primary" : ""}`}
       onClick={() => handleProjectSelect(project)}
     >
-      <CardHeader className="flex flex-row items-center justify-between p-2">
-        <CardTitle className="text-md font-medium p-0 flex items-center gap-2">
+      <CardContent className="flex gap-2 items-center justify-between">
+        <div className="flex items-center gap-6">
           <span className={isActive ? `text-primary` : ""}>
             {project.projectName}
           </span>
-          <Button
-            size="icon"
-            variant={isActive ? "destructiveGhost" : "primaryGhost"}
-            onClick={(e) => {
-              e.stopPropagation();
-              handleStartProject()
-            }}
-            title={project.command}
-          >
-            {isActive ? <Square /> : <Play />}
-          </Button>
-          <Input
-            onClick={(e) => e.stopPropagation()}
-            className="w-[80px] h-[30px] text-center"
-            placeholder="port"
-            onChange={e => setPort(e.target.value)}
-          />
+          <Badge variant="outline">{project.framework}</Badge>
 
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleProjectAction("edit", project);
-            }}
-          >
-            <Code className="h-4 w-4" />
-          </Button>
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleProjectAction("delete", project);
-            }}
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="p-1">
+          <div className="flex items-center gap-2 p-1 border rounded">
+            <Button
+              size="icon"
+              variant={isActive ? "destructiveGhost" : "primaryGhost"}
+              onClick={(e) => {
+                e.stopPropagation();
+
+                if (isActive) {
+                  handleStopProject();
+                } else {
+                  handleStartProject();
+                }
+              }}
+              title={project.command}
+            >
+              {isActive ? <Square /> : <Play />}
+            </Button>
+            <Input
+              onClick={(e) => e.stopPropagation()}
+              className="w-[80px] h-[30px] text-center"
+              placeholder="port"
+              onChange={(e) => setPort(e.target.value)}
+            />
+
+            <Button
+              size="icon"
+              variant="ghost"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleProjectAction("edit", project);
+              }}
+            >
+              <Code className="h-4 w-4" />
+            </Button>
+            <Button
+              size="icon"
+              variant="ghost"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleProjectAction("delete", project);
+              }}
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
         <div className="flex justify-between items-center py-1">
           <div>
-            <div className="flex items-center gap-2 mb-2">
-              <Badge variant="outline">{project.framework}</Badge>
+            <div className="flex items- justify-end gap-3 mb-2">
               <GitBranch className="h-4 w-4 text-muted-foreground" />
               <span className="text-sm">{project.gitBranch || "none"}</span>
             </div>
-            <div className="flex items-center gap-1">
+            <div className="flex items- justify-end gap-1">
               <Package className="h-4 w-4 text-muted-foreground" />
               <span className="text-sm text-muted-foreground">
                 {depCount} deps, {devDepCount} devDeps
