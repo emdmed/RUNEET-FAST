@@ -173,3 +173,55 @@
 body {
   font-family: 'YourCustomFont', sans-serif;
 }
+
+/* Global Scrollbar Styling */
+:root {
+  --scrollbar-size: 6px;
+  --scrollbar-track-color: transparent;
+  --scrollbar-thumb-color: rgba(155, 155, 155, 0.5);
+  --scrollbar-thumb-hover-color: rgba(155, 155, 155, 0.8);
+}
+
+/* For Webkit browsers (Chrome, Safari) */
+::-webkit-scrollbar {
+  width: var(--scrollbar-size);
+  height: var(--scrollbar-size);
+}
+
+::-webkit-scrollbar-track {
+  background: var(--scrollbar-track-color);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb-color);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover-color);
+}
+
+/* For Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb-color) var(--scrollbar-track-color);
+}
+
+/* For Edge and Internet Explorer */
+body {
+  -ms-overflow-style: none;  /* IE and Edge */
+}
+
+body::-webkit-scrollbar-thumb {
+  background-color: var(--scrollbar-thumb-color);
+}
+
+/* Optional: Hide scrollbar completely but keep functionality */
+.hide-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;  /* Chrome, Safari and Opera */
+}

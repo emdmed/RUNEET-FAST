@@ -99,8 +99,88 @@ export const ProjectCard = ({
       className={`cursor-pointer p-0 gap-1 ${isActive ? "border-primary" : ""}`}
       onClick={() => handleProjectSelect(project)}
     >
-      <CardContent className="flex gap-2 items-center justify-between">
-        <div className="flex items-center gap-6">
+      <CardContent className="flex flex-col md:flex-row gap-2 items-center justify-between px-2">
+        {/* Mobile (xs): Project name and start/stop button only */}
+        <div className="flex w-full sm:hidden items-center justify-between">
+          <span className={isActive ? `text-primary font-medium` : "font-medium"}>
+            {project.projectName}
+          </span>
+          <Button
+            size="sm"
+            variant={isActive ? "destructiveGhost" : "primaryGhost"}
+            onClick={(e) => {
+              e.stopPropagation();
+              if (isActive) {
+                handleStopProject();
+              } else {
+                handleStartProject();
+              }
+            }}
+            title={project.command}
+            className="ml-2"
+          >
+            {isActive ? <Square className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+          </Button>
+        </div>
+
+        {/* Tablet (sm): Project name and all control buttons */}
+        <div className="hidden sm:flex md:hidden w-full flex-col gap-3">
+          <div className="flex items-center justify-between">
+            <span className={isActive ? `text-primary font-medium` : "font-medium"}>
+              {project.projectName}
+            </span>
+            <Badge variant="outline">{project.framework}</Badge>
+          </div>
+          
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 p-1 border rounded">
+              <Button
+                size="icon"
+                variant={isActive ? "destructiveGhost" : "primaryGhost"}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (isActive) {
+                    handleStopProject();
+                  } else {
+                    handleStartProject();
+                  }
+                }}
+                title={project.command}
+              >
+                {isActive ? <Square /> : <Play />}
+              </Button>
+              <Input
+                onClick={(e) => e.stopPropagation()}
+                className="w-[80px] h-[30px] text-center"
+                placeholder="port"
+                onChange={(e) => setPort(e.target.value)}
+              />
+              <Button
+                size="icon"
+                variant="ghost"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleProjectAction("edit", project);
+                }}
+              >
+                <Code className="h-4 w-4" />
+              </Button>
+              <Button
+                size="icon"
+                variant="ghost"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleProjectAction("delete", project);
+                }}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        {/* Desktop (md+): Full layout with all details */}
+        <div className="hidden md:flex items-center gap-6">
           <span className={isActive ? `text-primary` : ""}>
             {project.projectName}
           </span>
@@ -152,17 +232,11 @@ export const ProjectCard = ({
             </Button>
           </div>
         </div>
-        <div className="flex justify-between items-center py-1">
+        <div className="flex hidden md:flex justify-between items-end py-1 w-fit">
           <div>
-            <div className="flex items- justify-end gap-3 mb-2">
+            <div className="flex items-end justify-end gap-3 mb-2 text-end">
               <GitBranch className="h-4 w-4 text-muted-foreground" />
               <span className="text-sm">{project.gitBranch || "none"}</span>
-            </div>
-            <div className="flex items- justify-end gap-1">
-              <Package className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm text-muted-foreground">
-                {depCount} deps, {devDepCount} devDeps
-              </span>
             </div>
           </div>
         </div>

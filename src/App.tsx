@@ -289,7 +289,7 @@ const ProjectDashboard = () => {
         open={selectedProject !== null}
         onOpenChange={(open) => !open && setSelectedProject(null)}
       >
-        <DialogContent className="max-w-3xl">
+        <DialogContent className="px-2 py-4">
           <DialogHeader>
             <DialogTitle>{selectedProject?.projectName} Details</DialogTitle>
             <DialogDescription>
@@ -299,7 +299,7 @@ const ProjectDashboard = () => {
 
           {selectedProject && (
             <>
-              <div className="grid grid-cols-2 gap-4 mb-4">
+              <div className="flex flex-col gap-4 mb-4">
                 <div>
                   <h4 className="text-sm font-medium text-muted-foreground mb-1">
                     Framework
@@ -353,8 +353,8 @@ const ProjectDashboard = () => {
                     Dev Dependencies
                   </TabsTrigger>
                 </TabsList>
-                <TabsContent value="dependencies" className="pt-4">
-                  <div className="grid grid-cols-3 gap-2">
+                <TabsContent value="dependencies" className="max-h-[300px] overflow-y-auto py-2">
+                  <div className="flex flex-col gap-2">
                     {Object.entries(selectedProject.dependencies || {}).length >
                     0 ? (
                       Object.entries(selectedProject.dependencies || {}).map(
@@ -378,8 +378,8 @@ const ProjectDashboard = () => {
                     )}
                   </div>
                 </TabsContent>
-                <TabsContent value="devDependencies" className="pt-4">
-                  <div className="grid grid-cols-3 gap-2">
+                <TabsContent value="devDependencies" className="">
+                  <div className="flex gap-2">
                     {Object.entries(selectedProject.devDependencies || {})
                       .length > 0 ? (
                       Object.entries(selectedProject.devDependencies || {}).map(
@@ -405,43 +405,7 @@ const ProjectDashboard = () => {
                 </TabsContent>
               </Tabs>
 
-              <Alert className="mt-4">
-                <RefreshCw className="h-4 w-4" />
-                <AlertTitle>Project Information</AlertTitle>
-                <AlertDescription>
-                  This project uses {selectedProject.framework} and is located
-                  at {selectedProject.path}. It's currently on the{" "}
-                  {selectedProject.gitBranch} branch.
-                </AlertDescription>
-              </Alert>
-
               <DialogFooter className="mt-4 gap-2">
-                <Button
-                  variant="default"
-                  className="gap-2"
-                  onClick={() => handleProjectAction("run", selectedProject)}
-                >
-                  <Play className="h-4 w-4" />
-                  Run ({selectedProject.command})
-                </Button>
-                <Button
-                  variant="outline"
-                  className="gap-2"
-                  onClick={() => handleProjectAction("edit", selectedProject)}
-                >
-                  <Code className="h-4 w-4" />
-                  Edit
-                </Button>
-                <Button
-                  variant="outline"
-                  className="gap-2"
-                  onClick={() =>
-                    handleProjectAction("settings", selectedProject)
-                  }
-                >
-                  <Settings className="h-4 w-4" />
-                  Settings
-                </Button>
                 <DialogClose asChild>
                   <Button variant="ghost">Close</Button>
                 </DialogClose>
