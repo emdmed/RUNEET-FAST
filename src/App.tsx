@@ -1,15 +1,5 @@
 import React, { useState, useEffect } from "react";
-import {
-  Folder,
-  Plus,
-  Settings,
-  Code,
-  Play,
-  RefreshCw,
-  Search,
-  Trash2,
-} from "lucide-react";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Folder, Plus, Search, Trash2, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -37,21 +27,22 @@ import { ProjectCard } from "./components/projects/projectCard";
 import api from "./utils/api";
 import { useProjectPersistence } from "./hooks/useProjectsPersistence";
 import { PortScanner } from "./components/portScanner/portScanner";
+import type { ProjectData, ProcessesData } from "./types/types";
 
 const ProjectDashboard = () => {
   // Sample project data based on the provided structure
   const storedProjects = useProjectPersistence();
-  const [projects, setProjects] = useState(storedProjects || []);
+  const [projects, setProjects] = useState<ProjectData[]>(storedProjects || []);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState("all");
-  const [selectedProject, setSelectedProject] = useState(null);
+  const [selectedProject, setSelectedProject] = useState<ProjectData | null>(null);
   const [addProjectDialogOpen, setAddProjectDialogOpen] = useState(false);
   const [projectPath, setProjectPath] = useState("");
-  const [allActiveTerminals, setAllActiveTerminals] = useState([]);
+  const [allActiveTerminals, setAllActiveTerminals] = useState<ProcessesData[]>([]);
 
   const fetchActiveTerminals = async () => {
-    const activeTerminalsResponse = await api.get("api/monitor-processes");
+    const activeTerminalsResponse: any = await api.get("api/monitor-processes");
     setAllActiveTerminals(activeTerminalsResponse.terminals);
   };
 
@@ -90,12 +81,12 @@ const ProjectDashboard = () => {
       return a.projectName.localeCompare(b.projectName);
     });
 
-  const handleProjectSelect = (project) => {
+  const handleProjectSelect = (project: ProjectData | null) => {
+    if(!project) return 
     setSelectedProject(project);
   };
 
-  const handleProjectAction = (action, project) => {
-    console.log(`${action} project:`, project);
+  const handleProjectAction = (action: string, project: ProjectData) => {
     // In a real app, you would implement the actual actions here
 
     if (action === "delete") {
@@ -128,7 +119,7 @@ const ProjectDashboard = () => {
 
     try {
       // Perform the POST request
-      const response = await api.post("/api/find-packages", {
+      const response: any = await api.post("/api/find-packages", {
         directory: projectPath,
       });
 
@@ -154,17 +145,19 @@ const ProjectDashboard = () => {
       {/* Sidebar */}
       <div className="w-64 border-r">
         <div className="p-4">
-          <h1 className="text-xl font-bold mb-6">Project Manager</h1>
-
+          <div className="flex items-center gap-2">
+            <h1 className="text-xl font-bold text-primary">Runeet</h1>
+            <Zap className="text-primary" />
+          </div>
           <Tabs
             defaultValue="all"
             value={activeTab}
             onValueChange={setActiveTab}
           >
-            <TabsList className="grid grid-cols-2 mb-4">
+            {/*             <TabsList className="grid grid-cols-2 mb-4">
               <TabsTrigger value="all">All</TabsTrigger>
               <TabsTrigger value="favorites">Favorites</TabsTrigger>
-            </TabsList>
+            </TabsList> */}
 
             <Separator className="my-4" />
 
@@ -226,7 +219,7 @@ const ProjectDashboard = () => {
               Delete all
             </Button>
           </div>
-          <PortScanner/>
+          <PortScanner />
         </div>
       </div>
 
@@ -334,7 +327,7 @@ const ProjectDashboard = () => {
                           <SelectValue placeholder="Switch" />
                         </SelectTrigger>
                         <SelectContent>
-                          {selectedProject.availableBranches.map((branch) => (
+                          {selectedProject.availableBranches.map((branch: string) => (
                             <SelectItem key={branch} value={branch}>
                               {branch}
                             </SelectItem>
@@ -353,12 +346,15 @@ const ProjectDashboard = () => {
                     Dev Dependencies
                   </TabsTrigger>
                 </TabsList>
-                <TabsContent value="dependencies" className="max-h-[300px] overflow-y-auto py-2">
+                <TabsContent
+                  value="dependencies"
+                  className="max-h-[300px] overflow-y-auto py-2"
+                >
                   <div className="flex flex-col gap-2">
                     {Object.entries(selectedProject.dependencies || {}).length >
                     0 ? (
                       Object.entries(selectedProject.dependencies || {}).map(
-                        ([name, version]) => (
+                        ([name, version]: any) => (
                           <Badge
                             key={name}
                             variant="outline"
@@ -378,12 +374,15 @@ const ProjectDashboard = () => {
                     )}
                   </div>
                 </TabsContent>
-                <TabsContent value="devDependencies" className="">
-                  <div className="flex gap-2">
+                <TabsContent
+                  value="devDependencies"
+                  className="max-h-[300px] overflow-y-auto py-2"
+                >
+                  <div className="flex flex-col gap-2">
                     {Object.entries(selectedProject.devDependencies || {})
                       .length > 0 ? (
                       Object.entries(selectedProject.devDependencies || {}).map(
-                        ([name, version]) => (
+                        ([name, version]: any) => (
                           <Badge
                             key={name}
                             variant="outline"

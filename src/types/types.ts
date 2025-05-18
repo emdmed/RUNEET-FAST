@@ -8,19 +8,42 @@ export interface Script {
   type: "frontend" | "backend" | "other";
 }
 
+export type Framework = "vite" | "server" | "next" | "react" | "default";
 export interface ProjectData {
-  id: string;
-  projectName: string;
-  scripts: Script[];
-  scriptCount: number;
+  availableBranches: any;
+  command: string;
+  dependencies: any;
+  devDependencies: any;
+  filePath: string;
+  framework: Framework;
+  gitBranch: string | null;
+  path: string;
+  projectName: string
 }
 
-export interface ProjectsProps {
-  projects: ProjectData[];
-  setProjects?: (projects: ProjectData[]) => void;
-  socket: any;
+export interface ProcessesData {
+  pid: string;
+  tty: string;
+  command: string;
+  cwd: string;
+  path: string
 }
 
+export interface ProjectProps {
+  project: ProjectData;
+  handleProjectSelect?: (project: ProjectData) => void;
+  handleProjectAction: (action: string, project: ProjectData) => void;
+  allActiveTerminals: ProcessesData[];
+  fetchActiveTerminals: () => void
+}
+
+export interface PortHandler {
+  vite: string;
+  server: string;
+  next: string;
+  default: string;
+  react: string
+}
 export interface PortsResponse {
   ports: number[]
 }

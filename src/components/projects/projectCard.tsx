@@ -1,35 +1,15 @@
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "../ui/input";
-import {
-  Folder,
-  Plus,
-  Settings,
-  Trash2,
-  Code,
-  Play,
-  RefreshCw,
-  Search,
-  GitBranch,
-  Package,
-  X,
-  Square,
-} from "lucide-react";
+import { Trash2, Code, Play, GitBranch, Square } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import api from "@/utils/api";
-
-const countDependencies = (project) => {
-  const depCount = Object.keys(project.dependencies || {}).length;
-  const devDepCount = Object.keys(project.devDependencies || {}).length;
-  return { depCount, devDepCount };
-};
+import type {
+  ProjectData,
+  ProjectProps,
+  PortHandler,
+} from "@/types/types";
 
 export const ProjectCard = ({
   project,
@@ -37,8 +17,7 @@ export const ProjectCard = ({
   handleProjectAction,
   allActiveTerminals,
   fetchActiveTerminals,
-}) => {
-  const { depCount, devDepCount } = countDependencies(project);
+}: ProjectProps) => {
   const [isActive, setIsActive] = useState(false);
   const [port, setPort] = useState("");
 
@@ -55,8 +34,8 @@ export const ProjectCard = ({
     }
   }, [allActiveTerminals]);
 
-  const createCommand = (process, port) => {
-    const portHandler = {
+  const createCommand = (process: ProjectData, port: string) => {
+    const portHandler: PortHandler = {
       vite: "-- --port",
       server: "-- --port",
       next: "-- -p",
@@ -93,16 +72,21 @@ export const ProjectCard = ({
       }, 3000);
     }
   };
+
   return (
     <Card
       key={project.path}
       className={`cursor-pointer p-0 gap-1 ${isActive ? "border-primary" : ""}`}
-      onClick={() => handleProjectSelect(project)}
+      onClick={() => {
+        if (handleProjectSelect) handleProjectSelect(project);
+      }}
     >
       <CardContent className="flex flex-col md:flex-row gap-2 items-center justify-between px-2">
         {/* Mobile (xs): Project name and start/stop button only */}
         <div className="flex w-full sm:hidden items-center justify-between">
-          <span className={isActive ? `text-primary font-medium` : "font-medium"}>
+          <span
+            className={isActive ? `text-primary font-medium` : "font-medium"}
+          >
             {project.projectName}
           </span>
           <Button
@@ -119,19 +103,25 @@ export const ProjectCard = ({
             title={project.command}
             className="ml-2"
           >
-            {isActive ? <Square className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+            {isActive ? (
+              <Square className="h-4 w-4" />
+            ) : (
+              <Play className="h-4 w-4" />
+            )}
           </Button>
         </div>
 
         {/* Tablet (sm): Project name and all control buttons */}
         <div className="hidden sm:flex md:hidden w-full flex-col gap-3">
           <div className="flex items-center justify-between">
-            <span className={isActive ? `text-primary font-medium` : "font-medium"}>
+            <span
+              className={isActive ? `text-primary font-medium` : "font-medium"}
+            >
               {project.projectName}
             </span>
             <Badge variant="outline">{project.framework}</Badge>
           </div>
-          
+
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 p-1 border rounded">
               <Button

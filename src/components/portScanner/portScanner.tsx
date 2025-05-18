@@ -62,15 +62,15 @@ export const PortScanner = () => {
 
   return (
     <>
-      <div className="flex flex-col gap-2 items-center mt-4 border-t p-2">
+      <div className="flex flex-col gap-2 items-center mt-4 border-t py-2 px-0">
         <small>Ports in use: </small>
-        <div className="grid grid-cols-4 gap-4">
+        <div className="grid grid-cols-3 gap-2">
           {ports.map((port) => (
           <Badge
             key={port}
             onClick={() => openConfirmDialog(port)}
             className="hover:border-destructive cursor-pointer"
-            variant="outline"
+            variant="secondary"
           >
             {port}
           </Badge>
