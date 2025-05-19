@@ -23,7 +23,7 @@ export const PortScanner = () => {
 
   const fetchPorts = async () => {
     const response: PortsResponse = await api.get(`api/used-ports`);
-    setPorts(response.ports);
+    setPorts(Array.from(new Set([...response.ports])));
   };
 
   const openConfirmDialog = (port: string | number) => {
@@ -66,15 +66,15 @@ export const PortScanner = () => {
         <small>Ports in use: </small>
         <div className="grid grid-cols-3 gap-2">
           {ports.map((port) => (
-          <Badge
-            key={port}
-            onClick={() => openConfirmDialog(port)}
-            className="hover:border-destructive cursor-pointer"
-            variant="secondary"
-          >
-            {port}
-          </Badge>
-        ))}
+            <Badge
+              key={port}
+              onClick={() => openConfirmDialog(port)}
+              className="hover:border-destructive cursor-pointer"
+              variant="secondary"
+            >
+              {port}
+            </Badge>
+          ))}
         </div>
       </div>
 

@@ -5,11 +5,7 @@ import { Trash2, Code, Play, GitBranch, Square } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import api from "@/utils/api";
-import type {
-  ProjectData,
-  ProjectProps,
-  PortHandler,
-} from "@/types/types";
+import type { ProjectData, ProjectProps, PortHandler } from "@/types/types";
 
 export const ProjectCard = ({
   project,
@@ -76,7 +72,7 @@ export const ProjectCard = ({
   return (
     <Card
       key={project.path}
-      className={`cursor-pointer p-0 gap-1 ${isActive ? "border-primary" : ""}`}
+      className={`cursor-pointer p-1 gap-1 ${isActive ? "border-primary" : ""}`}
       onClick={() => {
         if (handleProjectSelect) handleProjectSelect(project);
       }}
@@ -171,12 +167,7 @@ export const ProjectCard = ({
 
         {/* Desktop (md+): Full layout with all details */}
         <div className="hidden md:flex items-center gap-6">
-          <span className={isActive ? `text-primary` : ""}>
-            {project.projectName}
-          </span>
-          <Badge variant="outline">{project.framework}</Badge>
-
-          <div className="flex items-center gap-2 p-1 border rounded">
+          <div className="flex items-center gap-2 p-1 border-e">
             <Button
               size="icon"
               variant={isActive ? "destructiveGhost" : "primaryGhost"}
@@ -221,13 +212,15 @@ export const ProjectCard = ({
               <Trash2 className="h-4 w-4" />
             </Button>
           </div>
+          <span className={isActive ? `text-primary` : ""}>
+            {project.projectName}
+          </span>
+          <Badge variant="outline">{project.framework}</Badge>
         </div>
-        <div className="flex hidden md:flex justify-between items-end py-1 w-fit">
-          <div>
-            <div className="flex items-end justify-end gap-3 mb-2 text-end">
-              <GitBranch className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm">{project.gitBranch || "none"}</span>
-            </div>
+        <div className="flex hidden md:flex justify-between items-center py-1 w-fit">
+          <div className="flex justify-end gap-3 mb-2 text-end items-center">
+            <GitBranch className="h-4 w-4 text-muted-foreground" />
+            <span className="text-sm">{project.gitBranch || "none"}</span>
           </div>
         </div>
       </CardContent>
