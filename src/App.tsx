@@ -23,6 +23,16 @@ import {
   DialogTitle,
   DialogClose,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { ProjectCard } from "./components/projects/projectCard";
 import api from "./utils/api";
 import { useProjectPersistence } from "./hooks/useProjectsPersistence";
@@ -44,6 +54,7 @@ const ProjectDashboard = () => {
   const [allActiveTerminals, setAllActiveTerminals] = useState<ProcessesData[]>(
     []
   );
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
   const fetchActiveTerminals = async () => {
     const activeTerminalsResponse: any = await api.get("api/monitor-processes");
@@ -111,9 +122,14 @@ const ProjectDashboard = () => {
     setAddProjectDialogOpen(true);
   };
 
+  const handleDeleteConfirmOpen = () => {
+    setDeleteConfirmOpen(true);
+  };
+
   const handleDeleteAllProjects = () => {
     setProjects([]);
     localStorage.setItem("projects", "[]");
+    setDeleteConfirmOpen(false);
   };
 
   const handleAddProjectSubmit = async () => {
@@ -217,7 +233,7 @@ const ProjectDashboard = () => {
             <Button
               variant="destructiveOutline"
               className="w-full"
-              onClick={handleDeleteAllProjects}
+              onClick={handleDeleteConfirmOpen}
             >
               <Trash2 className="mr-2 h-4 w-4" />
               Delete all
@@ -452,6 +468,24 @@ const ProjectDashboard = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Delete All Confirmation Dialog */}
+      <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete All Projects</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will remove all projects from your dashboard. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteAllProjects} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Delete All
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
