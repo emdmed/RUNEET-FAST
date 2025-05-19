@@ -91,7 +91,7 @@ export const PortScanner = () => {
             <AlertDialogCancel onClick={handleCancel}>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleConfirm}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              className="bg-destructive hover:bg-destructive/90 hover:text-destructive-foreground"
             >
               Kill Process
             </AlertDialogAction>

@@ -166,8 +166,8 @@ export const ProjectCard = ({
         </div>
 
         {/* Desktop (md+): Full layout with all details */}
-        <div className="hidden md:flex items-center gap-6">
-          <div className="flex items-center gap-2 p-1 border-e">
+        <div className="hidden md:flex items-center gap-2">
+          <div className="flex items-center gap-2 p-1 pe-2 border-e">
             <Button
               size="icon"
               variant={isActive ? "destructiveGhost" : "primaryGhost"}
@@ -212,13 +212,13 @@ export const ProjectCard = ({
               <Trash2 className="h-4 w-4" />
             </Button>
           </div>
-          <span className={isActive ? `text-primary` : ""}>
+          <span className={`${isActive ? `text-primary` : ""} ps-2`}>
             {project.projectName}
           </span>
           <Badge variant="outline">{project.framework}</Badge>
         </div>
         <div className="flex hidden md:flex justify-between items-center py-1 w-fit">
-          <div className="flex justify-end gap-3 mb-2 text-end items-center">
+          <div className="flex justify-end gap-3 text-end items-center">
             <GitBranch className="h-4 w-4 text-muted-foreground" />
             <span className="text-sm">{project.gitBranch || "none"}</span>
           </div>
