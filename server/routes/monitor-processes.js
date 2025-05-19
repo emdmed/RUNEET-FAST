@@ -44,7 +44,6 @@ async function getTerminalsAndCommands() {
                             const { stdout: cwd } = await execAsync(`readlink /proc/${pid}/cwd`);
                             return { pid, tty, command, cwd: cwd.trim(), path: cwd.trim() };
                         } catch (error) {
-                            console.log(error);
                             return { pid, tty, command, cwd: "Unknown (Permission Denied or Process Ended)", path: "Unknown" };
                         }
                     }

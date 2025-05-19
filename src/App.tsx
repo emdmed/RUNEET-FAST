@@ -63,6 +63,12 @@ const ProjectDashboard = () => {
 
   useEffect(() => {
     fetchActiveTerminals();
+
+    const timer = setInterval(() => {
+      fetchActiveTerminals()
+    }, 2000);
+
+    return () => clearInterval(timer)
   }, []);
 
   useEffect(() => {
@@ -167,7 +173,7 @@ const ProjectDashboard = () => {
         <div className="p-4">
           <div className="flex items-center gap-2">
             <h1 className="text-xl font-bold text-primary">Runeet</h1>
-            <Zap className="text-primary" />
+            <Zap size={16} className="text-primary" />
           </div>
           <Tabs
             defaultValue="all"
