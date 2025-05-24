@@ -8,7 +8,7 @@ export interface Script {
   type: "frontend" | "backend" | "other";
 }
 
-export type Framework = "vite" | "server" | "next" | "react" | "default";
+export type Framework = "vite" | "server" | "next" | "react" | "default" | "custom";
 export interface ProjectData {
   availableBranches: any;
   command: string;
@@ -42,7 +42,8 @@ export interface PortHandler {
   server: string;
   next: string;
   default: string;
-  react: string
+  react: string,
+  custom: string
 }
 export interface PortsResponse {
   ports: number[]

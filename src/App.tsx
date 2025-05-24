@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Folder, Plus, Search, Trash2, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-
+import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -51,6 +51,9 @@ const ProjectDashboard = () => {
   );
   const [addProjectDialogOpen, setAddProjectDialogOpen] = useState(false);
   const [projectPath, setProjectPath] = useState("");
+  const [customCommand, setCustomCommand] = useState("");
+  const [customProjectName, setCustomProjectName] = useState("");
+  const [projectType, setProjectType] = useState<"auto" | "custom">("auto");
   const [allActiveTerminals, setAllActiveTerminals] = useState<ProcessesData[]>(
     []
   );
@@ -138,28 +141,56 @@ const ProjectDashboard = () => {
     setDeleteConfirmOpen(false);
   };
 
+  const resetAddProjectForm = () => {
+    setProjectPath("");
+    setCustomCommand("");
+    setCustomProjectName("");
+    setProjectType("auto");
+  };
+
   const handleAddProjectSubmit = async () => {
     if (!projectPath.trim()) {
       return; // Don't submit if path is empty
     }
 
     try {
-      // Perform the POST request
-      const response: any = await api.post("/api/find-packages", {
-        directory: projectPath,
-      });
+      if (projectType === "custom") {
+        // Handle custom script project
+        if (!customCommand.trim() || !customProjectName.trim()) {
+          return; // Don't submit if command or name is empty
+        }
 
-      const newProject = response.packageJsonFiles;
-      // Add the new project to the list
-      setProjects([...projects, ...newProject]);
+        const customProject: ProjectData = {
+          projectName: customProjectName.trim(),
+          path: projectPath.trim(),
+          framework: "custom",
+          command: customCommand.trim(),
+          dependencies: {},
+          devDependencies: {},
+          gitBranch: "main", // Default branch
+          availableBranches: [],
+          filePath: ""
+        };
 
-      // Close the dialog and reset the path
+        // Add the custom project to the list
+        const updatedProjects = [...projects, customProject];
+        setProjects(updatedProjects);
+        localStorage.setItem("projects", JSON.stringify(updatedProjects));
+      } else {
+        // Handle auto-detected project (existing functionality)
+        const response: any = await api.post("/api/find-packages", {
+          directory: projectPath,
+        });
+
+        const newProject = response.packageJsonFiles;
+        const updatedProjects = [...projects, ...newProject];
+        setProjects(updatedProjects);
+        localStorage.setItem("projects", JSON.stringify(updatedProjects));
+      }
+
+      // Close the dialog and reset the form
       setAddProjectDialogOpen(false);
-      setProjectPath("");
-      localStorage.setItem(
-        "projects",
-        JSON.stringify([...projects, ...newProject])
-      );
+      resetAddProjectForm();
     } catch (error) {
       console.error("Error adding project:", error);
       // In a real app, you would show an error message to the user
@@ -227,6 +258,14 @@ const ProjectDashboard = () => {
               >
                 <Folder className="mr-2 h-4 w-4" />
                 Node
+              </Button>
+              <Button
+                variant="ghost"
+                className="w-full justify-start"
+                onClick={() => setActiveTab("custom")}
+              >
+                <Folder className="mr-2 h-4 w-4" />
+                Custom
               </Button>
             </div>
           </Tabs>
@@ -367,70 +406,72 @@ const ProjectDashboard = () => {
                 </div>
               </div>
 
-              <Tabs defaultValue="dependencies">
-                <TabsList>
-                  <TabsTrigger value="dependencies">Dependencies</TabsTrigger>
-                  <TabsTrigger value="devDependencies">
-                    Dev Dependencies
-                  </TabsTrigger>
-                </TabsList>
-                <TabsContent
-                  value="dependencies"
-                  className="max-h-[300px] overflow-y-auto py-2"
-                >
-                  <div className="flex flex-col gap-2">
-                    {Object.entries(selectedProject.dependencies || {}).length >
-                    0 ? (
-                      Object.entries(selectedProject.dependencies || {}).map(
-                        ([name, version]: any) => (
-                          <Badge
-                            key={name}
-                            variant="outline"
-                            className="justify-between"
-                          >
-                            <span>{name}</span>
-                            <span className="ml-2 text-muted-foreground">
-                              {version}
-                            </span>
-                          </Badge>
+              {selectedProject.framework !== "custom" && (
+                <Tabs defaultValue="dependencies">
+                  <TabsList>
+                    <TabsTrigger value="dependencies">Dependencies</TabsTrigger>
+                    <TabsTrigger value="devDependencies">
+                      Dev Dependencies
+                    </TabsTrigger>
+                  </TabsList>
+                  <TabsContent
+                    value="dependencies"
+                    className="max-h-[300px] overflow-y-auto py-2"
+                  >
+                    <div className="flex flex-col gap-2">
+                      {Object.entries(selectedProject.dependencies || {}).length >
+                      0 ? (
+                        Object.entries(selectedProject.dependencies || {}).map(
+                          ([name, version]: any) => (
+                            <Badge
+                              key={name}
+                              variant="outline"
+                              className="justify-between"
+                            >
+                              <span>{name}</span>
+                              <span className="ml-2 text-muted-foreground">
+                                {version}
+                              </span>
+                            </Badge>
+                          )
                         )
-                      )
-                    ) : (
-                      <p className="text-muted-foreground">
-                        No dependencies found
-                      </p>
-                    )}
-                  </div>
-                </TabsContent>
-                <TabsContent
-                  value="devDependencies"
-                  className="max-h-[300px] overflow-y-auto py-2"
-                >
-                  <div className="flex flex-col gap-2">
-                    {Object.entries(selectedProject.devDependencies || {})
-                      .length > 0 ? (
-                      Object.entries(selectedProject.devDependencies || {}).map(
-                        ([name, version]: any) => (
-                          <Badge
-                            key={name}
-                            variant="outline"
-                            className="justify-between"
-                          >
-                            <span>{name}</span>
-                            <span className="ml-2 text-muted-foreground">
-                              {version}
-                            </span>
-                          </Badge>
+                      ) : (
+                        <p className="text-muted-foreground">
+                          No dependencies found
+                        </p>
+                      )}
+                    </div>
+                  </TabsContent>
+                  <TabsContent
+                    value="devDependencies"
+                    className="max-h-[300px] overflow-y-auto py-2"
+                  >
+                    <div className="flex flex-col gap-2">
+                      {Object.entries(selectedProject.devDependencies || {})
+                        .length > 0 ? (
+                        Object.entries(selectedProject.devDependencies || {}).map(
+                          ([name, version]: any) => (
+                            <Badge
+                              key={name}
+                              variant="outline"
+                              className="justify-between"
+                            >
+                              <span>{name}</span>
+                              <span className="ml-2 text-muted-foreground">
+                                {version}
+                              </span>
+                            </Badge>
+                          )
                         )
-                      )
-                    ) : (
-                      <p className="text-muted-foreground">
-                        No dev dependencies found
-                      </p>
-                    )}
-                  </div>
-                </TabsContent>
-              </Tabs>
+                      ) : (
+                        <p className="text-muted-foreground">
+                          No dev dependencies found
+                        </p>
+                      )}
+                    </div>
+                  </TabsContent>
+                </Tabs>
+              )}
 
               <DialogFooter className="mt-4 gap-2">
                 <DialogClose asChild>
@@ -445,32 +486,97 @@ const ProjectDashboard = () => {
       {/* Add Project Dialog */}
       <Dialog
         open={addProjectDialogOpen}
-        onOpenChange={setAddProjectDialogOpen}
+        onOpenChange={(open) => {
+          setAddProjectDialogOpen(open);
+          if (!open) resetAddProjectForm();
+        }}
       >
-        <DialogContent>
+        <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Add Project</DialogTitle>
             <DialogDescription>
-              Enter the absolute path to your project folder.
+              Add a project to your dashboard.
             </DialogDescription>
           </DialogHeader>
 
-          <div className="my-4">
-            <Input
-              placeholder="/path/to/your/project"
-              value={projectPath}
-              onChange={(e) => setProjectPath(e.target.value)}
-            />
+          <div className="space-y-4">
+            {/* Project Type Toggle */}
+            <div className="flex flex-col space-y-3">
+              <label className="text-sm font-medium">Project Type</label>
+              <div className="flex rounded-lg border p-1 bg-muted">
+                <Button
+                  type="button"
+                  variant={projectType === "auto" ? "default" : "ghost"}
+                  size="sm"
+                  className="flex-1 h-8"
+                  onClick={() => setProjectType("auto")}
+                >
+                  Auto-detect
+                </Button>
+                <Button
+                  type="button"
+                  variant={projectType === "custom" ? "default" : "ghost"}
+                  size="sm"
+                  className="flex-1 h-8"
+                  onClick={() => setProjectType("custom")}
+                >
+                  Custom
+                </Button>
+              </div>
+            </div>
+
+            {/* Project Path Input */}
+            <div className="flex flex-col space-y-2">
+              <label className="text-sm font-medium">Project Path</label>
+              <Input
+                placeholder="/path/to/project"
+                value={projectPath}
+                onChange={(e) => setProjectPath(e.target.value)}
+              />
+            </div>
+
+            {/* Custom Project Fields */}
+            {projectType === "custom" && (
+              <>
+                <div className="flex flex-col space-y-2">
+                  <label className="text-sm font-medium">Project Name</label>
+                  <Input
+                    placeholder="My Project"
+                    value={customProjectName}
+                    onChange={(e) => setCustomProjectName(e.target.value)}
+                  />
+                </div>
+
+                <div className="flex flex-col space-y-2">
+                  <label className="text-sm font-medium">Run Command</label>
+                  <Textarea
+                    placeholder="npm start"
+                    value={customCommand}
+                    onChange={(e) => setCustomCommand(e.target.value)}
+                    rows={3}
+                    className="resize-none"
+                  />
+                </div>
+              </>
+            )}
           </div>
 
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => setAddProjectDialogOpen(false)}
+              onClick={() => {
+                setAddProjectDialogOpen(false);
+                resetAddProjectForm();
+              }}
             >
               Cancel
             </Button>
-            <Button onClick={handleAddProjectSubmit}>Confirm</Button>
+            <Button 
+              onClick={handleAddProjectSubmit}
+              disabled={!projectPath.trim() || (projectType === "custom" && (!customCommand.trim() || !customProjectName.trim()))}
+            >
+              Add Project
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

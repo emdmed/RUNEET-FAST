@@ -22790,12 +22790,10 @@ var require_find_packages = __commonJS({
       } catch (error) {
         console.error(`Error parsing directory: ${dir}`, error);
       }
-      console.log("results", results);
       return results;
     };
     router.post("/find-packages", async (req, res) => {
       try {
-        console.log("body", req.body);
         const { directory } = req.body;
         if (!directory || typeof directory !== "string") {
           return res.status(400).json({ error: "Invalid directory path" });
@@ -22940,7 +22938,6 @@ var require_monitor_processes = __commonJS({
                   const { stdout: cwd } = await execAsync(`readlink /proc/${pid}/cwd`);
                   return { pid, tty, command, cwd: cwd.trim(), path: cwd.trim() };
                 } catch (error) {
-                  console.log(error);
                   return { pid, tty, command, cwd: "Unknown (Permission Denied or Process Ended)", path: "Unknown" };
                 }
               }

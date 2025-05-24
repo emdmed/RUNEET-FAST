@@ -37,6 +37,7 @@ export const ProjectCard = ({
       next: "-- -p",
       default: "-- --p",
       react: "-- --port",
+      custom: "",
     };
 
     const command = `${process.command} ${
@@ -184,13 +185,13 @@ export const ProjectCard = ({
             >
               {isActive ? <Square /> : <Play />}
             </Button>
-            <Input
+            {project.framework !== "custom" && <Input
               onClick={(e) => e.stopPropagation()}
               className="w-[80px] h-[30px] text-center"
               placeholder="port"
               onChange={(e) => setPort(e.target.value)}
             />
-
+}
             <Button
               size="icon"
               variant="ghost"
@@ -212,10 +213,14 @@ export const ProjectCard = ({
               <Trash2 className="h-4 w-4" />
             </Button>
           </div>
-          <span className={`${isActive ? `text-primary` : ""} ps-2`}>
-            {project.projectName}
-          </span>
-          <Badge variant="outline">{project.framework}</Badge>
+          <div className="flex items-center gap-2">
+            <span className={`${isActive ? `text-primary` : ""} ps-2`}>
+              {project.projectName}
+            </span>
+            <div>
+              <Badge variant="outline">{project.framework}</Badge>
+            </div>
+          </div>
         </div>
         <div className="flex hidden md:flex justify-between items-center py-1 w-fit">
           <div className="flex justify-end gap-3 text-end items-center">
