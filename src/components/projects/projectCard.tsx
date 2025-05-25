@@ -192,7 +192,7 @@ export const ProjectCard = ({
               onChange={(e) => setPort(e.target.value)}
             />
 }
-            <Button
+{/*             <Button
               size="icon"
               variant="ghost"
               onClick={(e) => {
@@ -201,7 +201,7 @@ export const ProjectCard = ({
               }}
             >
               <Code className="h-4 w-4" />
-            </Button>
+            </Button> */}
             <Button
               size="icon"
               variant="ghost"
